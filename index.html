@@ -4,917 +4,1031 @@
 <meta charset="utf-8">
 <title>4D Scratch — 4th Dimensional Game Engine</title>
 <style>
-  * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-  body { margin: 0; background:#1e1e2e; color:#fff; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
-  #top { display:flex; align-items:center; gap:10px; padding:8px 12px; background:#27293d; border-bottom:2px solid #444; }
-  #top h1 { font-size:18px; margin:0; color:#a78bfa; }
-  button.run { background:#4ade80; border:none; padding:6px 14px; border-radius:6px; font-weight:bold; cursor:pointer; }
-  button.stop { background:#f87171; border:none; padding:6px 14px; border-radius:6px; font-weight:bold; cursor:pointer; }
-  button.add { background:#60a5fa; border:none; padding:5px 8px; border-radius:6px; cursor:pointer; color:#000; font-size:11px;}
-  #main { display:flex; flex:1; overflow:hidden; }
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;}
+body{background:#1a1b2e;color:#fff;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
 
-  /* Palette */
-  #palette { width:210px; background:#27293d; overflow-y:auto; padding:8px; }
-  .cat { font-size:13px; font-weight:bold; margin:10px 0 4px; color:#fbbf24; }
-  .block {
-    color:#fff; padding:6px 8px; margin:4px 0; border-radius:6px; cursor:grab;
-    font-size:11px; user-select:none; line-height:1.4;
-  }
-  .b-motion{background:#5b8def} .b-control{background:#e0a93e} .b-events{background:#d96b6b}
-  .b-looks{background:#9c6ade} .b-4d{background:#36b3a8} .b-vars{background:#ff8c42} .b-sensing{background:#5cc9d6} .b-cstart{background:#666}
+/* TOP BAR */
+#topbar{display:flex;align-items:center;gap:8px;padding:6px 12px;background:#27293d;border-bottom:2px solid #5b8def;flex-shrink:0;}
+#topbar h1{font-size:17px;color:#a78bfa;margin-right:8px;}
+.btn{border:none;padding:5px 11px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-green{background:#4ade80;color:#000;}
+.btn-red{background:#f87171;color:#000;}
+.btn-blue{background:#60a5fa;color:#000;}
+.btn-gray{background:#4a4c6a;color:#fff;}
+#fps{font-size:11px;color:#888;margin-left:auto;}
 
-  /* Sprite list */
-  #sprites { width:160px; background:#27293d; border-left:1px solid #444; border-right:1px solid #444; padding:8px; overflow-y:auto; }
-  .sprite-item { padding:6px; margin:4px 0; border-radius:6px; background:#3a3c55; cursor:pointer; font-size:12px; display:flex; justify-content:space-between; align-items:center;}
-  .sprite-item.active { background:#5b8def; }
-  .sprite-item .del { opacity:.5; cursor:pointer; }
-  .sprite-item .del:hover{opacity:1;}
+/* MAIN 3-COLUMN LAYOUT */
+#main{display:flex;flex:1;overflow:hidden;}
 
-  /* Script area */
-  #scriptArea { flex:1; background:#2d2f45; position:relative; overflow:auto; background-image: radial-gradient(circle, #3a3c55 1px, transparent 1px); background-size:20px 20px;}
-  .script-block {
-    position:absolute; padding:5px 8px; border-radius:6px; font-size:11px; min-width:120px;
-    cursor:move; box-shadow:0 2px 4px rgba(0,0,0,.4);
-  }
-  .script-block input { width:38px; font-size:11px; border-radius:3px; border:none; padding:1px 3px; }
-  .script-block select { font-size:10px; border-radius:3px; }
-  .delbtn { float:right; cursor:pointer; color:#fff; opacity:.6; font-weight:bold; }
-  .delbtn:hover{opacity:1;}
-  .cwrap { border:1px dashed rgba(255,255,255,.4); border-radius:6px; padding:4px; margin-top:4px;}
+/* PALETTE */
+#palette{width:200px;background:#1e2038;overflow-y:auto;border-right:2px solid #333;flex-shrink:0;}
+.pal-cat{padding:6px 10px 2px;font-size:11px;font-weight:700;color:#fbbf24;text-transform:uppercase;letter-spacing:.5px;background:#252741;margin-top:4px;}
+.pal-block{
+  margin:3px 6px;padding:6px 8px;border-radius:6px;cursor:grab;font-size:11px;
+  user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:filter .1s;
+}
+.pal-block:hover{filter:brightness(1.2);}
+.pal-block:active{cursor:grabbing;}
+.pal-action{cursor:pointer;font-weight:700;opacity:.85;}
+.pal-action:hover{opacity:1;}
 
-  /* Stage */
-  #stageWrap { width:440px; background:#000; display:flex; flex-direction:column; border-left:1px solid #444; }
-  canvas { background:#0a0a14; display:block; }
-  #stageInfo { font-size:11px; padding:6px; color:#aaa; background:#15161f; max-height:120px; overflow-y:auto;}
-  #varPanel { padding:6px; font-size:11px; background:#15161f; border-top:1px solid #333; max-height:100px; overflow-y:auto;}
-  .tabbtn{background:#3a3c55;border:none;color:#fff;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:11px;margin-right:4px;}
-  .tabbtn.active{background:#5b8def;}
+/* SPRITE PANEL */
+#spritePanel{width:155px;background:#1e2038;border-right:2px solid #333;display:flex;flex-direction:column;flex-shrink:0;}
+#spritePanel h3{padding:7px 8px;font-size:12px;color:#a78bfa;background:#252741;border-bottom:1px solid #333;}
+#spriteList{flex:1;overflow-y:auto;padding:4px;}
+.sprite-card{padding:6px 8px;margin:3px 0;border-radius:6px;background:#2e3050;cursor:pointer;font-size:11px;display:flex;align-items:center;gap:6px;border:2px solid transparent;}
+.sprite-card:hover{background:#383a60;}
+.sprite-card.active{border-color:#5b8def;background:#2d3a6e;}
+.sprite-card .sname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sprite-card .sdel{opacity:.4;cursor:pointer;padding:0 2px;font-size:13px;}
+.sprite-card .sdel:hover{opacity:1;color:#f87171;}
+#spritePanel .add-btns{padding:6px;display:flex;flex-direction:column;gap:4px;border-top:1px solid #333;}
+#spritePanel .add-btns button{width:100%;padding:5px;border-radius:5px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:#5b8def;color:#fff;}
+
+/* SCRIPT AREA */
+#scriptWrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#scriptTabs{display:flex;align-items:center;gap:4px;padding:4px 8px;background:#252741;border-bottom:1px solid #333;flex-shrink:0;}
+#scriptTabs span{font-size:11px;color:#888;}
+#scriptArea{
+  flex:1;overflow:auto;position:relative;
+  background-color:#2a2c45;
+  background-image:radial-gradient(circle,#3a3c60 1px,transparent 1px);
+  background-size:24px 24px;
+}
+/* BLOCK STACKS */
+.stack-wrap{position:absolute;user-select:none;}
+.block-row{display:flex;flex-direction:column;position:relative;}
+.sb{
+  display:flex;align-items:center;flex-wrap:wrap;gap:3px;
+  padding:5px 8px;min-height:28px;border-radius:5px;cursor:pointer;
+  font-size:11px;white-space:nowrap;border:2px solid transparent;
+  position:relative;
+}
+.sb:hover{filter:brightness(1.15);}
+.sb.drag-over{border-color:#fff !important;}
+.sb input{width:40px;font-size:11px;border-radius:3px;border:none;padding:1px 3px;cursor:text;}
+.sb select{font-size:10px;border-radius:3px;cursor:pointer;}
+.sb input[type=color]{width:30px;height:20px;padding:0;border:none;cursor:pointer;}
+.sb .del-block{margin-left:auto;opacity:.45;cursor:pointer;font-size:13px;padding:0 2px;flex-shrink:0;}
+.sb .del-block:hover{opacity:1;color:#f87171;}
+/* hat block gets notch top */
+.sb.hat{border-radius:12px 12px 5px 5px;padding-top:7px;}
+/* C-block body indent */
+.c-body{margin-left:18px;border-left:3px solid rgba(255,255,255,.25);padding-left:4px;min-height:28px;}
+.c-body.empty::before{content:'drop blocks here';font-size:10px;color:#888;padding:6px 8px;display:block;}
+.c-mouth{/* bottom of C-block */}
+
+/* SNAP HIGHLIGHT */
+.snap-hint{outline:3px solid #fff !important;outline-offset:2px;}
+
+/* STAGE */
+#stageWrap{width:430px;flex-shrink:0;background:#0a0a14;display:flex;flex-direction:column;border-left:2px solid #333;}
+#stage{display:block;background:#0a0a14;}
+#stageInfo{font-size:10px;padding:5px 8px;background:#15161f;color:#aaa;border-top:1px solid #333;}
+#varMonitor{font-size:10px;padding:4px 8px;background:#0e0f1c;color:#4ade80;font-family:monospace;min-height:28px;border-top:1px solid #222;max-height:80px;overflow-y:auto;}
+
+/* GHOST */
+#dragGhost{
+  position:fixed;pointer-events:none;z-index:9999;
+  padding:5px 10px;border-radius:6px;font-size:11px;color:#fff;
+  opacity:.85;box-shadow:0 4px 12px rgba(0,0,0,.5);
+  display:none;
+}
+
+/* COLOR CLASSES */
+.bc-events{background:#c0392b;} .bc-4d{background:#27ae87;} .bc-motion{background:#2980b9;}
+.bc-looks{background:#8e44ad;} .bc-control{background:#e67e22;} .bc-vars{background:#d35400;}
+.bc-sensing{background:#2471a3;} .bc-sound{background:#1a5276;} .bc-ops{background:#1e8449;}
 </style>
 </head>
 <body>
-<div id="errBanner" style="display:none;position:fixed;top:0;left:0;right:0;background:#f87171;color:#000;padding:6px 12px;font-size:12px;z-index:9999;font-family:monospace;"></div>
-<script>
-window.onerror = function(msg,src,line,col){
-  const b=document.getElementById('errBanner');
-  b.style.display='block';
-  b.textContent = 'JS Error: '+msg+' (line '+line+')';
-  return false;
-};
-</script>
 
-<div id="top">
-  <h1>🧊 4D Scratch Engine</h1>
-  <button class="run" onclick="runProject()">▶ Run</button>
-  <button class="stop" onclick="stopProject()">■ Stop</button>
-  <button class="add" onclick="saveProject()">💾 Save</button>
-  <button class="add" onclick="document.getElementById('loadFile').click()">📂 Load</button>
-  <input type="file" id="loadFile" style="display:none" accept=".json" onchange="loadProject(event)">
-  <span style="margin-left:20px;font-size:12px;color:#aaa">Drag blocks left → script area. Drop near a block's bottom edge to snap below it. Drag into a C-shaped block's slot to nest.</span>
+<div id="topbar">
+  <h1>🧊 4D Scratch</h1>
+  <button class="btn btn-green" id="btnRun">▶ Run</button>
+  <button class="btn btn-red" id="btnStop">■ Stop</button>
+  <button class="btn btn-blue" id="btnSave">💾 Save</button>
+  <button class="btn btn-gray" id="btnLoad">📂 Load</button>
+  <input type="file" id="fileInput" accept=".json" style="display:none">
+  <span id="fps"></span>
 </div>
 
 <div id="main">
+
+  <!-- PALETTE -->
   <div id="palette"></div>
 
-  <div id="sprites">
-    <div class="cat">Objects</div>
-    <button class="add" onclick="addSprite('tesseract')">+ Tesseract</button>
-    <button class="add" onclick="addSprite('16cell')">+ 16-cell</button>
-    <button class="add" onclick="addSprite('5cell')">+ 5-cell</button>
+  <!-- SPRITE PANEL -->
+  <div id="spritePanel">
+    <h3>🔷 Objects</h3>
     <div id="spriteList"></div>
-    <div class="cat">Global Variables</div>
-    <button class="add" onclick="newVariable()">+ Variable</button>
-    <div id="globalVarList"></div>
+    <div class="add-btns">
+      <button onclick="addSprite('tesseract')">+ Tesseract</button>
+      <button onclick="addSprite('hypersphere')">+ Hypersphere</button>
+      <button onclick="addSprite('16cell')">+ 16-Cell</button>
+      <button onclick="addSprite('5cell')">+ 5-Cell</button>
+      <button onclick="addSprite('24cell')">+ 24-Cell</button>
+    </div>
   </div>
 
-  <div id="scriptArea"></div>
+  <!-- SCRIPT EDITOR -->
+  <div id="scriptWrap">
+    <div id="scriptTabs">
+      <span id="scriptTabLabel">Scripts for: —</span>
+      <button class="btn btn-gray" style="margin-left:auto;font-size:10px" onclick="clearScriptArea()">Clear All</button>
+    </div>
+    <div id="scriptArea"></div>
+  </div>
 
+  <!-- STAGE -->
   <div id="stageWrap">
-    <canvas id="stage" width="440" height="440"></canvas>
-    <div id="stageInfo">Click stage, then use defined key-blocks to control objects. Use Sensing blocks for collisions.</div>
-    <div id="varPanel"></div>
+    <canvas id="stage" width="430" height="360"></canvas>
+    <div id="stageInfo">Click the stage to focus keyboard input there.</div>
+    <div id="varMonitor"></div>
   </div>
+
 </div>
 
+<div id="dragGhost"></div>
+
 <script>
-/* ============================================================
+/* =====================================================================
    4D MATH
-   ============================================================ */
-const AXES = ['x','y','z','w'];
-const PLANES = ['xy','xz','xw','yz','yw','zw'];
+   ===================================================================== */
+const AXES4=['x','y','z','w'];
+const PLANES4=['xy','xz','xw','yz','yw','zw'];
 
-function rotate4D(v, plane, ang) {
-  const [a,b] = plane;
-  const ai = AXES.indexOf(a), bi = AXES.indexOf(b);
-  const c = Math.cos(ang), s = Math.sin(ang);
-  const va = v[ai], vb = v[bi];
-  const r = v.slice();
-  r[ai] = va*c - vb*s;
-  r[bi] = va*s + vb*c;
-  return r;
+function rotate4D(v,plane,ang){
+  const ai=AXES4.indexOf(plane[0]),bi=AXES4.indexOf(plane[1]);
+  const c=Math.cos(ang),si=Math.sin(ang),va=v[ai],vb=v[bi];
+  const r=v.slice(); r[ai]=va*c-vb*si; r[bi]=va*si+vb*c; return r;
 }
+function proj4to3(p,wD=3){const f=wD/(wD-p[3]);return[p[0]*f,p[1]*f,p[2]*f];}
+function proj3to2(p,zD=4){const f=zD/(zD-p[2]);return[p[0]*f,p[1]*f];}
 
-function makeTesseract() {
-  let verts = [];
-  for (let i=0;i<16;i++) verts.push([(i&1)?1:-1,(i&2)?1:-1,(i&4)?1:-1,(i&8)?1:-1]);
-  let edges = [];
-  for (let i=0;i<16;i++) for (let j=i+1;j<16;j++){
-    let diff=0; for(let k=0;k<4;k++) if(verts[i][k]!==verts[j][k]) diff++;
-    if (diff===1) edges.push([i,j]);
+/* 4D Geometries */
+function makeTesseract(){
+  const v=[];for(let i=0;i<16;i++)v.push([(i&1)?1:-1,(i&2)?1:-1,(i&4)?1:-1,(i&8)?1:-1]);
+  const e=[];for(let i=0;i<16;i++)for(let j=i+1;j<16;j++){let d=0;for(let k=0;k<4;k++)if(v[i][k]!==v[j][k])d++;if(d===1)e.push([i,j]);}
+  return{verts:v,edges:e};
+}
+function make16Cell(){
+  const v=[];for(let i=0;i<4;i++){const p=[0,0,0,0],m=[0,0,0,0];p[i]=1;m[i]=-1;v.push(p,m);}
+  const e=[];for(let i=0;i<8;i++)for(let j=i+1;j<8;j++)if(Math.floor(i/2)!==Math.floor(j/2))e.push([i,j]);
+  return{verts:v,edges:e};
+}
+function make5Cell(){
+  const s=1/Math.sqrt(5);
+  const v=[[1,1,1,-s],[1,-1,-1,-s],[-1,1,-1,-s],[-1,-1,1,-s],[0,0,0,4*s]];
+  const e=[];for(let i=0;i<5;i++)for(let j=i+1;j<5;j++)e.push([i,j]);
+  return{verts:v,edges:e};
+}
+function make24Cell(){
+  const v=[];
+  for(let i=0;i<4;i++)for(const s of[1,-1])for(let j=0;j<4;j++)if(j!==i){for(const t of[1,-1]){const p=[0,0,0,0];p[i]=s;p[j]=t;v.push(p);}}
+  // deduplicate
+  const uv=[],seen=new Set();
+  for(const p of v){const k=p.join(',');if(!seen.has(k)){seen.add(k);uv.push(p);}}
+  const e=[];for(let i=0;i<uv.length;i++)for(let j=i+1;j<uv.length;j++){let d=0;for(let k=0;k<4;k++)d+=(uv[i][k]-uv[j][k])**2;if(Math.abs(d-2)<.01)e.push([i,j]);}
+  return{verts:uv,edges:e};
+}
+function makeHypersphere(segs=8){
+  // approximate with latitude/longitude/4th dim slices
+  const v=[];const e=[];
+  for(let a=0;a<=segs;a++)for(let b=0;b<=segs;b++){
+    const ta=a/segs*Math.PI,tb=b/segs*2*Math.PI;
+    v.push([Math.sin(ta)*Math.cos(tb),Math.sin(ta)*Math.sin(tb),Math.cos(ta),0]);
   }
-  return {verts, edges};
+  // add w-axis ring
+  for(let a=0;a<=segs;a++){
+    const ta=a/segs*2*Math.PI;
+    v.push([Math.cos(ta),0,0,Math.sin(ta)]);
+    v.push([0,Math.cos(ta),0,Math.sin(ta)]);
+    v.push([0,0,Math.cos(ta),Math.sin(ta)]);
+  }
+  for(let a=0;a<segs;a++)for(let b=0;b<segs;b++){
+    const i=a*(segs+1)+b;e.push([i,i+1]);e.push([i,i+segs+1]);
+  }
+  const base=(segs+1)**2;
+  for(let i=base;i<v.length-1;i+=3){e.push([i,i+3]);e.push([i+1,i+4]);e.push([i+2,i+5]);}
+  return{verts:v,edges:e};
 }
-function make16cell() {
-  let verts=[];
-  for(let i=0;i<4;i++){ let p=[0,0,0,0],m=[0,0,0,0]; p[i]=1; m[i]=-1; verts.push(p,m); }
-  let edges=[];
-  for(let i=0;i<8;i++) for(let j=i+1;j<8;j++) if(Math.floor(i/2)!==Math.floor(j/2)) edges.push([i,j]);
-  return {verts, edges};
-}
-function make5cell() {
-  let verts = [
-    [ 1, 1, 1, -1/Math.sqrt(5)],[ 1,-1,-1, -1/Math.sqrt(5)],
-    [-1, 1,-1, -1/Math.sqrt(5)],[-1,-1, 1, -1/Math.sqrt(5)],
-    [ 0, 0, 0, 4/Math.sqrt(5)]
-  ];
-  let edges=[];
-  for(let i=0;i<5;i++) for(let j=i+1;j<5;j++) edges.push([i,j]);
-  return {verts, edges};
-}
-const SHAPE_MAKERS = {tesseract: makeTesseract, '16cell': make16cell, '5cell': make5cell};
+const GEOM_MAKERS={tesseract:makeTesseract,'16cell':make16Cell,'5cell':make5Cell,'24cell':make24Cell,hypersphere:makeHypersphere};
 
-/* ============================================================
+/* =====================================================================
    GLOBAL STATE
-   ============================================================ */
-let sprites = [];
-let activeSprite = null;
-let nextId = 1;
-let globalVars = {}; // name -> value
-let broadcasts = new Set(['Message1','Message2']);
+   ===================================================================== */
+let sprites=[],activeSprite=null,nextId=1;
+let globalVars={};
+let broadcasts=new Set(['Start','GameOver','Win']);
+let keys={},prevKeys={};
+let running=false,frameCount=0,lastFps=0,lastFpsTime=0;
+let currentMessages={};// spriteId->text
+let receivedBroadcasts=new Set();
+let pendingBroadcasts=new Set();
 
-function addSprite(shape='tesseract') {
-  const id = nextId++;
-  const s = {
-    id, name: shape+id, shape,
-    geom: SHAPE_MAKERS[shape](),
-    x:0, y:0, z:0, w:0,
-    vx:0, vy:0, vz:0, vw:0,
-    rot: {xy:0, xz:0, xw:0, yz:0, yw:0, zw:0},
-    scale: 1,
-    color: ['#ff6b6b','#4ade80','#60a5fa','#fbbf24','#c084fc','#36b3a8'][(id-1)%6],
+/* =====================================================================
+   SPRITE MODEL
+   ===================================================================== */
+function makeSprite(shape='tesseract'){
+  const id=nextId++;
+  return{
+    id,name:shape[0].toUpperCase()+shape.slice(1)+id,shape,
+    geom:GEOM_MAKERS[shape](),
+    x:0,y:0,z:0,w:0,
+    vx:0,vy:0,vz:0,vw:0,
+    rot:{xy:0,xz:0,xw:0,yz:0,yw:0,zw:0},
+    scale:1,
+    color:['#ff6b6b','#4ade80','#60a5fa','#fbbf24','#c084fc','#36b3a8','#fb923c','#e879f9'][(id-1)%8],
     visible:true,
-    scripts: [],
-    vars: {} // sprite-local vars: name->value
+    scripts:[],// [{x,y,blocks:[...]}]
+    vars:{},
+    _gens:new Map()// runtime: path->generator
   };
+}
+function addSprite(shape){
+  const s=makeSprite(shape);
   sprites.push(s);
-  activeSprite = s;
-  renderSpriteList();
-  renderScriptArea();
-  renderVarPanel();
+  activeSprite=s;
+  refreshSpriteList();
+  refreshScriptArea();
   renderStage();
   return s;
 }
-
 function deleteSprite(s){
-  sprites = sprites.filter(x=>x!==s);
-  if(activeSprite===s) activeSprite = sprites[0]||null;
-  renderSpriteList(); renderScriptArea(); renderVarPanel(); renderStage();
+  sprites=sprites.filter(x=>x!==s);
+  if(activeSprite===s)activeSprite=sprites[0]||null;
+  refreshSpriteList();refreshScriptArea();renderStage();
 }
-
-function renderSpriteList(){
-  const el = document.getElementById('spriteList');
+function refreshSpriteList(){
+  const el=document.getElementById('spriteList');
   el.innerHTML='';
   sprites.forEach(s=>{
     const d=document.createElement('div');
-    d.className='sprite-item'+(s===activeSprite?' active':'');
-    d.innerHTML = `<span>${s.name}</span><span><span style="color:${s.color}">●</span> <span class="del">✕</span></span>`;
-    d.onclick=(e)=>{
-      if(e.target.className==='del'){ deleteSprite(s); return; }
-      activeSprite=s; renderSpriteList(); renderScriptArea(); renderVarPanel();
-    };
+    d.className='sprite-card'+(s===activeSprite?' active':'');
+    d.innerHTML=`<span class="sdot" style="color:${s.color};font-size:16px">●</span><span class="sname">${s.name}</span><span class="sdel">✕</span>`;
+    d.querySelector('.sdel').onclick=e=>{e.stopPropagation();deleteSprite(s);};
+    d.onclick=()=>{activeSprite=s;refreshSpriteList();refreshScriptArea();};
     el.appendChild(d);
   });
+  document.getElementById('scriptTabLabel').textContent='Scripts for: '+(activeSprite?activeSprite.name:'—');
+  refreshVarMonitor();
 }
+function clearScriptArea(){if(activeSprite&&confirm('Clear all scripts for '+activeSprite.name+'?')){activeSprite.scripts=[];refreshScriptArea();}}
 
-/* sprite-local variable management */
-function newVariable(){
-  const name = prompt('New global variable name:');
-  if(!name) return;
-  globalVars[name]=0;
-  renderVarPanel();
-  renderPalette();
-}
-function newLocalVariable(){
-  if(!activeSprite) return;
-  const name = prompt('New variable name for '+activeSprite.name+':');
-  if(!name) return;
-  activeSprite.vars[name]=0;
-  renderVarPanel();
-  renderPalette();
-}
-function renderVarPanel(){
-  const el = document.getElementById('varPanel');
-  let html = '<b>Global:</b> ';
-  for(const k in globalVars) html += `${k}=${round(globalVars[k])} &nbsp; `;
-  html += '<br><b>'+(activeSprite?activeSprite.name:'')+':</b> ';
-  if(activeSprite){
-    html += `x=${round(activeSprite.x)} y=${round(activeSprite.y)} z=${round(activeSprite.z)} w=${round(activeSprite.w)}<br>`;
-    for(const k in activeSprite.vars) html += `${k}=${round(activeSprite.vars[k])} &nbsp; `;
-  }
-  el.innerHTML = html;
-}
-function round(n){ return Math.round(n*100)/100; }
-
-document.getElementById('globalVarList').innerHTML='';
-</script>
-
-<script>
-/* ============================================================
-   BLOCK DEFINITIONS
-   Each block: {cat,label,fields,shape:'stack'|'cstart'|'cif'|'cifelse', run(...)}
-   For C-blocks, 'body'/'body2' arrays hold nested stacks.
-   run signature: (sprite, fields, ctx, state, block) -> 'wait'|'repeat'|undefined
-   ============================================================ */
-const KEYOPTS = ['w','a','s','d','q','e','r','f','t','g','up','down','left','right','space'];
-
-function dynVarOptions(){
-  let opts = Object.keys(globalVars);
-  if(activeSprite) opts = opts.concat(Object.keys(activeSprite.vars));
-  if(opts.length===0) opts=['(none)'];
-  return opts;
-}
-
-const BLOCK_DEFS = {
-  // EVENTS
-  whenFlag: {cat:'events', label:'when 🚩 clicked', fields:[], isHat:true},
-  whenKey: {cat:'events', label:'when key [key] pressed', fields:[{key:'key',type:'select',options:KEYOPTS,default:'space'}], isHat:true,
-    test:(s,f,ctx)=>ctx.keys[f.key] && !ctx.prevKeys[f.key] },
-  whenKeyDown: {cat:'events', label:'when key [key] is held', fields:[{key:'key',type:'select',options:KEYOPTS,default:'space'}], isHat:true,
-    test:(s,f,ctx)=>ctx.keys[f.key] },
-  whenReceive: {cat:'events', label:'when I receive [msg]', fields:[{key:'msg',type:'selectDyn',options:()=>[...broadcasts],default:'Message1'}], isHat:true,
-    test:(s,f,ctx)=>ctx.received.has(f.msg) },
-  broadcast: {cat:'events', label:'broadcast [msg]', shape:'stack', fields:[{key:'msg',type:'selectDyn',options:()=>[...broadcasts],default:'Message1'}],
-    run:(s,f,ctx)=>{ ctx.toSend.add(f.msg); }
-  },
-  newBroadcast: {cat:'events', label:'+ new message', shape:'action', fields:[],
-    action:()=>{ const n=prompt('Message name:'); if(n){broadcasts.add(n); renderPalette();} }
-  },
-
-  // MOTION / 4D
-  move: {cat:'4d', label:'move [axis] by [n]', shape:'stack', fields:[
-      {key:'axis',type:'select',options:AXES,default:'x'},{key:'n',type:'number',default:1}],
-    run:(s,f)=>{ s[f.axis]+=Number(f.n); }
-  },
-  setpos: {cat:'4d', label:'set x:[x] y:[y] z:[z] w:[w]', shape:'stack', fields:[
-      {key:'x',type:'number',default:0},{key:'y',type:'number',default:0},
-      {key:'z',type:'number',default:0},{key:'w',type:'number',default:0}],
-    run:(s,f)=>{ s.x=Number(f.x); s.y=Number(f.y); s.z=Number(f.z); s.w=Number(f.w); }
-  },
-  changevel: {cat:'4d', label:'change velocity [axis] by [n]', shape:'stack', fields:[
-      {key:'axis',type:'select',options:AXES,default:'x'},{key:'n',type:'number',default:0.1}],
-    run:(s,f)=>{ s['v'+f.axis]+=Number(f.n); }
-  },
-  applyvel: {cat:'4d', label:'apply velocity (with friction [n])', shape:'stack', fields:[{key:'n',type:'number',default:0.98}],
-    run:(s,f)=>{ AXES.forEach(a=>{ s[a]+=s['v'+a]; s['v'+a]*=Number(f.n); }); }
-  },
-  rotate4d: {cat:'4d', label:'rotate plane [plane] by [deg]°', shape:'stack', fields:[
-      {key:'plane',type:'select',options:PLANES,default:'xw'},{key:'deg',type:'number',default:1}],
-    run:(s,f)=>{ s.rot[f.plane]+= Number(f.deg)*Math.PI/180; }
-  },
-  setscale: {cat:'4d', label:'set scale to [n]', shape:'stack', fields:[{key:'n',type:'number',default:1}],
-    run:(s,f)=>{ s.scale=Number(f.n); }
-  },
-  bounce4d: {cat:'4d', label:'bounce if outside ±[n] (axes [axis])', shape:'stack', fields:[
-      {key:'n',type:'number',default:3},{key:'axis',type:'select',options:['x','y','z','w','all'],default:'all'}],
-    run:(s,f)=>{
-      const lim=Number(f.n);
-      const axesToCheck = f.axis==='all'?AXES:[f.axis];
-      axesToCheck.forEach(a=>{
-        if(s[a]>lim){ s[a]=lim; s['v'+a]*=-1; }
-        if(s[a]<-lim){ s[a]=-lim; s['v'+a]*=-1; }
-      });
-    }
-  },
-
-  // LOOKS
-  setcolor: {cat:'looks', label:'set color to [color]', shape:'stack', fields:[{key:'color',type:'color',default:'#ff6b6b'}],
-    run:(s,f)=>{ s.color=f.color; }
-  },
-  show: {cat:'looks', label:'show', shape:'stack', fields:[], run:(s)=>{ s.visible=true; } },
-  hide: {cat:'looks', label:'hide', shape:'stack', fields:[], run:(s)=>{ s.visible=false; } },
-  say: {cat:'looks', label:'show message [text]', shape:'stack', fields:[{key:'text',type:'text',default:'Hello 4D!'}],
-    run:(s,f,ctx)=>{ ctx.message = f.text; }
-  },
-
-  // VARIABLES
-  setvarG: {cat:'vars', label:'set var [name] to [val]', shape:'stack', fields:[
-      {key:'name',type:'selectDyn',options:dynVarOptions,default:'(none)'},{key:'val',type:'number',default:0}],
-    run:(s,f)=>{ setVar(s,f.name,Number(f.val)); }
-  },
-  changevarG: {cat:'vars', label:'change var [name] by [val]', shape:'stack', fields:[
-      {key:'name',type:'selectDyn',options:dynVarOptions,default:'(none)'},{key:'val',type:'number',default:1}],
-    run:(s,f)=>{ setVar(s,f.name, getVar(s,f.name)+Number(f.val)); }
-  },
-  newLocalVarBtn: {cat:'vars', label:'+ new sprite variable', shape:'action', fields:[], action:()=>newLocalVariable() },
-
-  // CONTROL
-  repeatN: {cat:'control', label:'repeat [n] times', shape:'cstart', fields:[{key:'n',type:'number',default:10}],
-    init:(state,f)=>{ state.count=0; },
-    run:(s,f,ctx,state)=>{
-      if(state.count>=Number(f.n)) { state.count=0; return; }
-      state.count++; return 'repeat';
-    }
-  },
-  forever: {cat:'control', label:'forever', shape:'cstart', fields:[],
-    run:()=>{ return 'repeat'; }
-  },
-  ifBlock: {cat:'control', label:'if [cond] then', shape:'cif', fields:[
-      {key:'cond',type:'cond',default:{op:'>',a:{type:'var',name:'(none)'},b:{type:'lit',val:0}}}],
-    run:(s,f,ctx)=>{ return evalCond(s,f.cond,ctx) ? 'repeat':undefined; },
-    once:true
-  },
-  ifElseBlock: {cat:'control', label:'if [cond] then / else', shape:'cifelse', fields:[
-      {key:'cond',type:'cond',default:{op:'>',a:{type:'var',name:'(none)'},b:{type:'lit',val:0}}}],
-    run:(s,f,ctx)=>{ return evalCond(s,f.cond,ctx)?'branch1':'branch2'; },
-    once:true
-  },
-  wait: {cat:'control', label:'wait [n] frames', shape:'stack', fields:[{key:'n',type:'number',default:30}],
-    run:(s,f,ctx,state)=>{
-      if(state.waitLeft===undefined) state.waitLeft=Number(f.n);
-      if(state.waitLeft>0){ state.waitLeft--; return 'wait'; }
-      delete state.waitLeft;
-    }
-  },
-  stopAll: {cat:'control', label:'stop all', shape:'stack', fields:[], run:(s,f,ctx)=>{ ctx.stopAll=true; } },
-
-  // SENSING
-  ifTouching: {cat:'sensing', label:'touching [target] (dist<[n])', shape:'stack', fields:[
-      {key:'target',type:'selectDyn',options:()=>sprites.map(s=>s.name),default:''},
-      {key:'n',type:'number',default:1.5}],
-    run:()=>{} // used only inside conditions; placeholder so it appears in palette as info
-  },
-};
-
-const CAT_CLASS = {events:'b-events', '4d':'b-4d', control:'b-control', looks:'b-looks', vars:'b-vars', sensing:'b-sensing'};
-
+/* =====================================================================
+   VARIABLE HELPERS
+   ===================================================================== */
 function getVar(s,name){
-  if(s && name in s.vars) return s.vars[name];
-  if(name in globalVars) return globalVars[name];
+  if(s&&name in s.vars)return s.vars[name];
+  if(name in globalVars)return globalVars[name];
   return 0;
 }
 function setVar(s,name,val){
-  if(s && name in s.vars) s.vars[name]=val;
-  else globalVars[name]=val;
+  if(s&&name in s.vars)s.vars[name]=val;
+  else if(name in globalVars)globalVars[name]=val;
 }
-
-/* condition evaluator: cond = {op:'>','<','=','touching', a:{type:'var'|'lit',...}, b:{...}} */
-function condValue(s,operand){
-  if(!operand) return 0;
-  if(operand.type==='lit') return operand.val;
-  if(operand.type==='var') return getVar(s,operand.name);
-  return 0;
+function allVarNames(){
+  const names=Object.keys(globalVars);
+  if(activeSprite)names.push(...Object.keys(activeSprite.vars).map(n=>'@'+n));
+  return names.length?names:['(none)'];
 }
-function evalCond(s,cond,ctx){
-  if(!cond) return false;
-  if(cond.op==='touching'){
-    const target = sprites.find(x=>x.name===cond.target);
-    if(!target || target===s) return false;
-    const d = Math.hypot(s.x-target.x,s.y-target.y,s.z-target.z,s.w-target.w);
-    return d < (Number(cond.dist)||1.5);
+function resolveVar(s,rawName){
+  if(rawName.startsWith('@'))return{obj:s.vars,key:rawName.slice(1)};
+  return{obj:globalVars,key:rawName};
+}
+function newGlobalVar(){const n=prompt('New global variable name:');if(!n)return;globalVars[n]=0;refreshPalette();refreshVarMonitor();}
+function newLocalVar(){if(!activeSprite)return;const n=prompt('New local variable:');if(!n)return;activeSprite.vars['@'+n]=0;refreshPalette();refreshVarMonitor();}
+function refreshVarMonitor(){
+  let html='';
+  for(const k in globalVars)html+=`<span style="color:#fbbf24">${k}</span>=<b>${round2(globalVars[k])}</b>&nbsp; `;
+  if(activeSprite){
+    html+=`&nbsp;|&nbsp;<span style="color:${activeSprite.color}">${activeSprite.name}</span>: `;
+    html+=`x=${round2(activeSprite.x)} y=${round2(activeSprite.y)} z=${round2(activeSprite.z)} w=${round2(activeSprite.w)}&nbsp; `;
+    for(const k in activeSprite.vars)html+=`<span style="color:#a78bfa">${k.replace('@','')}</span>=<b>${round2(activeSprite.vars[k])}</b>&nbsp;`;
   }
-  if(cond.op==='key') return !!ctx.keys[cond.key];
-  const a = condValue(s,cond.a), b = condValue(s,cond.b);
-  switch(cond.op){
-    case '>': return a>b;
-    case '<': return a<b;
-    case '=': return a===b;
-    default: return false;
-  }
+  document.getElementById('varMonitor').innerHTML=html||'No variables';
 }
+function round2(n){return Math.round(n*100)/100;}
 </script>
 
 <script>
-/* ============================================================
-   PALETTE
-   ============================================================ */
-function renderPalette(){
-  const el = document.getElementById('palette');
+/* =====================================================================
+   BLOCK DEFINITIONS
+   ===================================================================== */
+const KEYOPTS=['w','a','s','d','q','e','r','f','t','g','h','space','up','down','left','right','1','2','3','4','5'];
+const AXOPTS=['x','y','z','w'];
+const PLANEOPTS=['xy','xz','xw','yz','yw','zw'];
+const AXALL=['x','y','z','w','all'];
+
+// shape: 'hat'|'stack'|'cap'|'cstart'(loop/forever)|'cif'|'cifelse'|'action'
+const BD={
+  /* EVENTS */
+  whenFlag:{cat:'events',label:'🚩 when flag clicked',shape:'hat',fields:[],isHat:true},
+  whenKeyPress:{cat:'events',label:'when [key] pressed',shape:'hat',fields:[{k:'key',t:'sel',o:KEYOPTS,d:'space'}],isHat:true,
+    hatTest:(s,f,C)=>C.keys[f.key]&&!C.prevKeys[f.key]},
+  whenKeyHeld:{cat:'events',label:'while [key] held',shape:'hat',fields:[{k:'key',t:'sel',o:KEYOPTS,d:'space'}],isHat:true,
+    hatTest:(s,f,C)=>C.keys[f.key]},
+  whenReceive:{cat:'events',label:'when I receive [msg]',shape:'hat',fields:[{k:'msg',t:'dsel',o:()=>[...broadcasts],d:'Start'}],isHat:true,
+    hatTest:(s,f,C)=>C.received.has(f.msg)},
+  broadcast:{cat:'events',label:'broadcast [msg]',shape:'stack',fields:[{k:'msg',t:'dsel',o:()=>[...broadcasts],d:'Start'}],
+    run:(s,f,C)=>C.toSend.add(f.msg)},
+  broadcastWait:{cat:'events',label:'broadcast [msg] and wait',shape:'stack',fields:[{k:'msg',t:'dsel',o:()=>[...broadcasts],d:'Start'}],
+    run:(s,f,C,st)=>{C.toSend.add(f.msg);/* simplified: just sends */}},
+  newMsg:{cat:'events',label:'+ new message',shape:'action',fields:[],action:()=>{const n=prompt('Message:');if(n){broadcasts.add(n);refreshPalette();}}},
+
+  /* 4D MOTION */
+  move4d:{cat:'4d',label:'move [axis] by [n]',shape:'stack',fields:[{k:'axis',t:'sel',o:AXOPTS,d:'x'},{k:'n',t:'num',d:1}],
+    run:(s,f)=>{s[f.axis]+=+f.n;}},
+  setPos:{cat:'4d',label:'set pos x[x] y[y] z[z] w[w]',shape:'stack',fields:[{k:'x',t:'num',d:0},{k:'y',t:'num',d:0},{k:'z',t:'num',d:0},{k:'w',t:'num',d:0}],
+    run:(s,f)=>{s.x=+f.x;s.y=+f.y;s.z=+f.z;s.w=+f.w;}},
+  setAxis:{cat:'4d',label:'set [axis] to [n]',shape:'stack',fields:[{k:'axis',t:'sel',o:AXOPTS,d:'x'},{k:'n',t:'num',d:0}],
+    run:(s,f)=>{s[f.axis]=+f.n;}},
+  changeVel:{cat:'4d',label:'add [n] to velocity [axis]',shape:'stack',fields:[{k:'n',t:'num',d:0.1},{k:'axis',t:'sel',o:AXOPTS,d:'x'}],
+    run:(s,f)=>{s['v'+f.axis]+=+f.n;}},
+  setVel:{cat:'4d',label:'set velocity [axis] to [n]',shape:'stack',fields:[{k:'axis',t:'sel',o:AXOPTS,d:'x'},{k:'n',t:'num',d:0}],
+    run:(s,f)=>{s['v'+f.axis]=+f.n;}},
+  applyVel:{cat:'4d',label:'apply velocity friction[f]',shape:'stack',fields:[{k:'f',t:'num',d:0.98}],
+    run:(s,f)=>{AXOPTS.forEach(a=>{s[a]+=s['v'+a];s['v'+a]*=+f.f;});}},
+  gravity4d:{cat:'4d',label:'gravity [axis] strength [g]',shape:'stack',fields:[{k:'axis',t:'sel',o:AXOPTS,d:'y'},{k:'g',t:'num',d:0.05}],
+    run:(s,f)=>{s['v'+f.axis]-=+f.g;}},
+  rotate4d:{cat:'4d',label:'rotate [plane] by [deg]°',shape:'stack',fields:[{k:'plane',t:'sel',o:PLANEOPTS,d:'xw'},{k:'deg',t:'num',d:1}],
+    run:(s,f)=>{s.rot[f.plane]+=+f.deg*Math.PI/180;}},
+  setRot:{cat:'4d',label:'set rotation [plane] to [deg]°',shape:'stack',fields:[{k:'plane',t:'sel',o:PLANEOPTS,d:'xw'},{k:'deg',t:'num',d:0}],
+    run:(s,f)=>{s.rot[f.plane]=+f.deg*Math.PI/180;}},
+  setScale:{cat:'4d',label:'set scale to [n]',shape:'stack',fields:[{k:'n',t:'num',d:1}],
+    run:(s,f)=>{s.scale=+f.n;}},
+  changeScale:{cat:'4d',label:'change scale by [n]',shape:'stack',fields:[{k:'n',t:'num',d:0.1}],
+    run:(s,f)=>{s.scale+=+f.n;}},
+  bounce4d:{cat:'4d',label:'bounce off wall ±[lim] axis [axis]',shape:'stack',fields:[{k:'lim',t:'num',d:3},{k:'axis',t:'sel',o:AXALL,d:'all'}],
+    run:(s,f)=>{
+      const lim=+f.lim,axes=f.axis==='all'?AXOPTS:[f.axis];
+      axes.forEach(a=>{if(s[a]>lim){s[a]=lim;s['v'+a]*=-1;}if(s[a]<-lim){s[a]=-lim;s['v'+a]*=-1;}});
+    }},
+  wrapAround:{cat:'4d',label:'wrap around ±[lim] axis [axis]',shape:'stack',fields:[{k:'lim',t:'num',d:4},{k:'axis',t:'sel',o:AXALL,d:'all'}],
+    run:(s,f)=>{
+      const lim=+f.lim,axes=f.axis==='all'?AXOPTS:[f.axis];
+      axes.forEach(a=>{if(s[a]>lim)s[a]=-lim;if(s[a]<-lim)s[a]=lim;});
+    }},
+  pointToward:{cat:'4d',label:'move toward [target] speed [n]',shape:'stack',fields:[{k:'target',t:'dsel',o:()=>sprites.map(s=>s.name),d:''},{k:'n',t:'num',d:0.1}],
+    run:(s,f)=>{
+      const t=sprites.find(x=>x.name===f.target);if(!t)return;
+      const dx=t.x-s.x,dy=t.y-s.y,dz=t.z-s.z,dw=t.w-s.w;
+      const mag=Math.hypot(dx,dy,dz,dw)||1;const sp=+f.n;
+      s.x+=dx/mag*sp;s.y+=dy/mag*sp;s.z+=dz/mag*sp;s.w+=dw/mag*sp;
+    }},
+
+  /* LOOKS */
+  setColor:{cat:'looks',label:'set color to [c]',shape:'stack',fields:[{k:'c',t:'color',d:'#ff6b6b'}],
+    run:(s,f)=>{s.color=f.c;}},
+  show:{cat:'looks',label:'show',shape:'stack',fields:[],run:(s)=>{s.visible=true;}},
+  hide:{cat:'looks',label:'hide',shape:'stack',fields:[],run:(s)=>{s.visible=false;}},
+  sayFor:{cat:'looks',label:'say [msg] for [n] frames',shape:'stack',fields:[{k:'msg',t:'txt',d:'Hello!'},{k:'n',t:'num',d:60}],
+    run:(s,f,C,st)=>{
+      if(st.t===undefined){st.t=+f.n;currentMessages[s.id]=f.msg;}
+      if(st.t>0){st.t--;return'wait';}
+      delete currentMessages[s.id];delete st.t;
+    }},
+  say:{cat:'looks',label:'say [msg]',shape:'stack',fields:[{k:'msg',t:'txt',d:'Hello!'}],
+    run:(s,f)=>{currentMessages[s.id]=f.msg;}},
+  clearSay:{cat:'looks',label:'clear speech bubble',shape:'stack',fields:[],run:(s)=>{delete currentMessages[s.id];}},
+  setName:{cat:'looks',label:'rename to [name]',shape:'stack',fields:[{k:'name',t:'txt',d:'Shape'}],
+    run:(s,f)=>{s.name=f.name;refreshSpriteList();}},
+
+  /* SOUND - placeholder visual only */
+  playTone:{cat:'sound',label:'play tone [hz]hz for [ms]ms',shape:'stack',fields:[{k:'hz',t:'num',d:440},{k:'ms',t:'num',d:200}],
+    run:(s,f)=>{
+      try{
+        const ac=new AudioContext();const o=ac.createOscillator();const g=ac.createGain();
+        o.connect(g);g.connect(ac.destination);o.frequency.value=+f.hz;
+        o.start();g.gain.setValueAtTime(0.3,ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+(+f.ms)/1000);
+        o.stop(ac.currentTime+(+f.ms)/1000);
+      }catch(e){}
+    }},
+  playBeep:{cat:'sound',label:'beep [type] [hz]hz',shape:'stack',fields:[{k:'type',t:'sel',o:['sine','square','triangle','sawtooth'],d:'sine'},{k:'hz',t:'num',d:440}],
+    run:(s,f)=>{
+      try{
+        const ac=new AudioContext();const o=ac.createOscillator();const g=ac.createGain();
+        o.type=f.type;o.connect(g);g.connect(ac.destination);o.frequency.value=+f.hz;
+        o.start();g.gain.setValueAtTime(0.2,ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.3);
+        o.stop(ac.currentTime+0.35);
+      }catch(e){}
+    }},
+
+  /* SENSING */
+  isTouching:{cat:'sensing',label:'if touching [target] dist<[d]',shape:'cif',isCondBlock:true,
+    fields:[{k:'target',t:'dsel',o:()=>sprites.map(s=>s.name),d:''},{k:'d',t:'num',d:1.5}],
+    cond:(s,f)=>{const t=sprites.find(x=>x.name===f.target);if(!t||t===s)return false;return Math.hypot(s.x-t.x,s.y-t.y,s.z-t.z,s.w-t.w)<+f.d;},
+    body:[]},
+  isKeyDown:{cat:'sensing',label:'if key [key] is held',shape:'cif',isCondBlock:true,
+    fields:[{k:'key',t:'sel',o:KEYOPTS,d:'space'}],
+    cond:(s,f,C)=>!!C.keys[f.key],body:[]},
+  isKeyUp:{cat:'sensing',label:'if key [key] NOT held',shape:'cif',isCondBlock:true,
+    fields:[{k:'key',t:'sel',o:KEYOPTS,d:'space'}],
+    cond:(s,f,C)=>!C.keys[f.key],body:[]},
+  isVarCmp:{cat:'sensing',label:'if [v] [op] [n]',shape:'cif',isCondBlock:true,
+    fields:[{k:'v',t:'dsel',o:allVarNames,d:'(none)'},{k:'op',t:'sel',o:['>','<','=','≥','≤','≠'],d:'>'},{k:'n',t:'num',d:0}],
+    cond:(s,f)=>{
+      const v=getVar(s,f.v),n=+f.n;
+      switch(f.op){case '>':return v>n;case '<':return v<n;case '=':return v===n;case '≥':return v>=n;case '≤':return v<=n;case '≠':return v!==n;}
+      return false;
+    },body:[]},
+  isVarCmpElse:{cat:'sensing',label:'if [v] [op] [n] / else',shape:'cifelse',isCondBlock:true,
+    fields:[{k:'v',t:'dsel',o:allVarNames,d:'(none)'},{k:'op',t:'sel',o:['>','<','=','≥','≤','≠'],d:'>'},{k:'n',t:'num',d:0}],
+    cond:(s,f)=>{
+      const v=getVar(s,f.v),n=+f.n;
+      switch(f.op){case '>':return v>n;case '<':return v<n;case '=':return v===n;case '≥':return v>=n;case '≤':return v<=n;case '≠':return v!==n;}
+      return false;
+    },body:[],body2:[]},
+  touchingElse:{cat:'sensing',label:'if touching [target] / else',shape:'cifelse',isCondBlock:true,
+    fields:[{k:'target',t:'dsel',o:()=>sprites.map(s=>s.name),d:''},{k:'d',t:'num',d:1.5}],
+    cond:(s,f)=>{const t=sprites.find(x=>x.name===f.target);if(!t||t===s)return false;return Math.hypot(s.x-t.x,s.y-t.y,s.z-t.z,s.w-t.w)<+f.d;},
+    body:[],body2:[]},
+
+  /* VARIABLES */
+  setVar:{cat:'vars',label:'set [v] to [n]',shape:'stack',fields:[{k:'v',t:'dsel',o:allVarNames,d:'(none)'},{k:'n',t:'num',d:0}],
+    run:(s,f)=>setVar(s,f.v,+f.n)},
+  changeVar:{cat:'vars',label:'change [v] by [n]',shape:'stack',fields:[{k:'v',t:'dsel',o:allVarNames,d:'(none)'},{k:'n',t:'num',d:1}],
+    run:(s,f)=>setVar(s,f.v,getVar(s,f.v)+(+f.n))},
+  setVarTo:{cat:'vars',label:'set [v] to axis [axis]',shape:'stack',fields:[{k:'v',t:'dsel',o:allVarNames,d:'(none)'},{k:'axis',t:'sel',o:[...AXOPTS,'scale','vx','vy','vz','vw'],d:'x'}],
+    run:(s,f)=>setVar(s,f.v,s[f.axis]||0)},
+  newGVar:{cat:'vars',label:'+ new global variable',shape:'action',fields:[],action:newGlobalVar},
+  newLVar:{cat:'vars',label:'+ new local variable',shape:'action',fields:[],action:newLocalVar},
+
+  /* CONTROL */
+  forever:{cat:'control',label:'forever',shape:'cstart',fields:[],body:[],
+    run:()=>'repeat'},
+  repeat:{cat:'control',label:'repeat [n]',shape:'cstart',fields:[{k:'n',t:'num',d:10}],body:[],
+    init:(st,f)=>{st.i=0;st.max=+f.n;},
+    run:(s,f,C,st)=>{if(st.i>=st.max)return;st.i++;return'repeat';}},
+  repeatUntil:{cat:'control',label:'repeat until [v][op][n]',shape:'cstart',
+    fields:[{k:'v',t:'dsel',o:allVarNames,d:'(none)'},{k:'op',t:'sel',o:['>','<','='],d:'>'},{k:'n',t:'num',d:0}],body:[],
+    run:(s,f,C)=>{
+      const v=getVar(s,f.v),n=+f.n;
+      let done=false;
+      if(f.op==='>'&&v>n)done=true;if(f.op==='<'&&v<n)done=true;if(f.op==='='&&v===n)done=true;
+      return done?undefined:'repeat';
+    }},
+  waitFrames:{cat:'control',label:'wait [n] frames',shape:'stack',fields:[{k:'n',t:'num',d:30}],
+    run:(s,f,C,st)=>{if(st.t===undefined)st.t=+f.n;if(st.t>0){st.t--;return'wait';}delete st.t;}},
+  waitUntil:{cat:'control',label:'wait until [v][op][n]',shape:'stack',
+    fields:[{k:'v',t:'dsel',o:allVarNames,d:'(none)'},{k:'op',t:'sel',o:['>','<','='],d:'>'},{k:'n',t:'num',d:0}],
+    run:(s,f,C)=>{
+      const v=getVar(s,f.v),n=+f.n;
+      let met=false;
+      if(f.op==='>'&&v>n)met=true;if(f.op==='<'&&v<n)met=true;if(f.op==='='&&v===n)met=true;
+      return met?undefined:'wait';
+    }},
+  stopThis:{cat:'control',label:'stop this script',shape:'cap',fields:[],run:(s,f,C)=>{return'stop';}},
+  stopAll:{cat:'control',label:'stop all',shape:'cap',fields:[],run:(s,f,C)=>{C.stopAll=true;}},
+  resetSprite:{cat:'control',label:'reset position',shape:'stack',fields:[],
+    run:(s)=>{s.x=0;s.y=0;s.z=0;s.w=0;s.vx=0;s.vy=0;s.vz=0;s.vw=0;PLANEOPTS.forEach(p=>s.rot[p]=0);}},
+
+  /* MATH / OPS */
+  mathOp:{cat:'ops',label:'set [v] to [v2] [op] [n]',shape:'stack',
+    fields:[{k:'v',t:'dsel',o:allVarNames,d:'(none)'},{k:'v2',t:'dsel',o:allVarNames,d:'(none)'},{k:'op',t:'sel',o:['+','-','×','÷','%','pow','min','max'],d:'+'},{k:'n',t:'num',d:1}],
+    run:(s,f)=>{
+      const a=getVar(s,f.v2),b=+f.n;
+      let res=a;
+      switch(f.op){case'+':res=a+b;break;case'-':res=a-b;break;case'×':res=a*b;break;case'÷':res=b?a/b:0;break;case'%':res=a%b;break;case'pow':res=Math.pow(a,b);break;case'min':res=Math.min(a,b);break;case'max':res=Math.max(a,b);break;}
+      setVar(s,f.v,res);
+    }},
+  mathFunc:{cat:'ops',label:'set [v] to [fn]([v2])',shape:'stack',
+    fields:[{k:'v',t:'dsel',o:allVarNames,d:'(none)'},{k:'fn',t:'sel',o:['abs','sqrt','floor','ceil','round','sin','cos','tan','log'],d:'abs'},{k:'v2',t:'dsel',o:allVarNames,d:'(none)'}],
+    run:(s,f)=>{const a=getVar(s,f.v2);const fn=Math[f.fn];setVar(s,f.v,fn?fn(a):a);}},
+  setVarRandom:{cat:'ops',label:'set [v] random [lo] to [hi]',shape:'stack',
+    fields:[{k:'v',t:'dsel',o:allVarNames,d:'(none)'},{k:'lo',t:'num',d:0},{k:'hi',t:'num',d:10}],
+    run:(s,f)=>setVar(s,f.v,+f.lo+Math.random()*(+f.hi-+f.lo))},
+  clampVar:{cat:'ops',label:'clamp [v] between [lo] and [hi]',shape:'stack',
+    fields:[{k:'v',t:'dsel',o:allVarNames,d:'(none)'},{k:'lo',t:'num',d:0},{k:'hi',t:'num',d:10}],
+    run:(s,f)=>setVar(s,f.v,Math.max(+f.lo,Math.min(+f.hi,getVar(s,f.v))))},
+};
+
+const CAT_COLORS={events:'bc-events','4d':'bc-4d',motion:'bc-motion',looks:'bc-looks',control:'bc-control',vars:'bc-vars',sensing:'bc-sensing',sound:'bc-sound',ops:'bc-ops'};
+const CAT_ORDER=['events','4d','looks','sound','sensing','vars','control','ops'];
+const CAT_NAMES={events:'Events','4d':'4D Motion',looks:'Looks',sound:'Sound',sensing:'Sensing',vars:'Variables',control:'Control',ops:'Math & Ops'};
+</script>
+
+<script>
+/* =====================================================================
+   PALETTE RENDER
+   ===================================================================== */
+function refreshPalette(){
+  const el=document.getElementById('palette');
   el.innerHTML='';
-  const cats = {events:'Events', '4d':'4D Motion', looks:'Looks', vars:'Variables', control:'Control', sensing:'Sensing'};
-  for(const c in cats){
-    const h = document.createElement('div'); h.className='cat'; h.textContent=cats[c];
-    el.appendChild(h);
-    for(const key in BLOCK_DEFS){
-      const def = BLOCK_DEFS[key];
-      if(def.cat!==c) continue;
-      const b = document.createElement('div');
-      b.className='block '+CAT_CLASS[c];
-      b.textContent = def.label.replace(/\[.*?\]/g,'_');
+  CAT_ORDER.forEach(cat=>{
+    const ch=document.createElement('div');ch.className='pal-cat';ch.textContent=CAT_NAMES[cat];el.appendChild(ch);
+    Object.entries(BD).filter(([,d])=>d.cat===cat).forEach(([key,def])=>{
+      const b=document.createElement('div');
+      const cc=CAT_COLORS[cat]||'bc-4d';
       if(def.shape==='action'){
-        b.style.cursor='pointer';
+        b.className=`pal-block ${cc} pal-action`;
+        b.textContent=def.label;
         b.onclick=def.action;
-        b.style.fontWeight='bold';
       } else {
+        b.className=`pal-block ${cc}`;
+        b.textContent=def.label.replace(/\[[^\]]+\]/g,'_');
         b.draggable=true;
-        b.ondragstart=(e)=>{ e.dataTransfer.setData('text/plain', JSON.stringify({type:'new', blockType:key})); };
+        b.ondragstart=e=>{
+          e.dataTransfer.setData('text/plain',JSON.stringify({src:'palette',key}));
+          e.dataTransfer.effectAllowed='copy';
+        };
+        b.addEventListener('mousedown',e=>{
+          if(e.button!==0)return;
+          startPaletteDrag(key,e);
+        });
       }
       el.appendChild(b);
-    }
-  }
-}
-renderPalette();
-
-/* ============================================================
-   SCRIPT AREA — block tree model
-   block = {type, fields:{...}, x,y (top-level only), body:[...], body2:[...]}
-   scripts = array of top-level stacks; each stack = array of blocks (linear chain)
-   ============================================================ */
-function newBlockFromType(type){
-  const def = BLOCK_DEFS[type];
-  const fields={};
-  def.fields.forEach(f=>{
-    fields[f.key] = (typeof f.default==='object') ? JSON.parse(JSON.stringify(f.default)) : f.default;
+    });
   });
-  const b = {type, fields};
-  if(def.shape==='cstart'||def.shape==='cif') b.body=[];
-  if(def.shape==='cifelse'){ b.body=[]; b.body2=[]; }
+}
+
+/* =====================================================================
+   BLOCK FACTORY
+   ===================================================================== */
+function newBlock(type){
+  const def=BD[type];
+  const fields={};
+  def.fields.forEach(f=>fields[f.k]=f.d);
+  const b={type,fields};
+  if(def.shape==='cstart'||def.shape==='cif')b.body=[];
+  if(def.shape==='cifelse'){b.body=[];b.body2=[];}
   return b;
 }
 
-function renderScriptArea(){
-  const area = document.getElementById('scriptArea');
+/* =====================================================================
+   SCRIPT AREA RENDER
+   ===================================================================== */
+function refreshScriptArea(){
+  const area=document.getElementById('scriptArea');
   area.innerHTML='';
-  if(!activeSprite) return;
-  activeSprite.scripts.forEach((stack)=>{
-    const wrap = document.createElement('div');
-    wrap.style.position='absolute';
-    wrap.style.left=stack.x+'px';
-    wrap.style.top=stack.y+'px';
-    renderStack(stack.blocks, wrap, stack);
+  document.getElementById('scriptTabLabel').textContent='Scripts for: '+(activeSprite?activeSprite.name:'—');
+  if(!activeSprite)return;
+  activeSprite.scripts.forEach((stack,si)=>{
+    const wrap=document.createElement('div');
+    wrap.className='stack-wrap';
+    wrap.style.left=Math.max(10,stack.x)+'px';
+    wrap.style.top=Math.max(10,stack.y)+'px';
+    wrap.dataset.stackIdx=si;
+    // drag to move whole stack
+    let draggingStack=false,ox=0,oy=0;
+    wrap.addEventListener('mousedown',e=>{
+      if(e.target!==wrap&&e.target.className!=='block-row')return;
+      draggingStack=true;ox=e.clientX-stack.x;oy=e.clientY-stack.y;
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove',e=>{if(!draggingStack)return;stack.x=e.clientX-ox;stack.y=e.clientY-oy;wrap.style.left=stack.x+'px';wrap.style.top=stack.y+'px';});
+    document.addEventListener('mouseup',()=>{draggingStack=false;});
+    renderBlockList(wrap,stack.blocks,activeSprite,si,null,0);
     area.appendChild(wrap);
   });
 }
 
-// renders a chain of blocks vertically inside container `wrap`
-function renderStack(blocks, wrap, topStack){
-  let yoff=0;
-  blocks.forEach((block,i)=>{
-    const def = BLOCK_DEFS[block.type];
-    const div = document.createElement('div');
-    div.className='script-block '+CAT_CLASS[def.cat];
-    div.style.position='absolute';
-    div.style.left='0px';
-    div.style.top=yoff+'px';
+function renderBlockList(container,blocks,sprite,stackIdx,parentBlock,depth){
+  blocks.forEach((block,bi)=>{
+    const def=BD[block.type];
+    if(!def)return;
+    const row=document.createElement('div');
+    row.className='block-row';
+    row.dataset.bi=bi;
+    row.dataset.depth=depth;
 
-    let html = def.label;
-    def.fields.forEach(f=>{
-      let inputHtml;
-      if(f.type==='select'){
-        inputHtml = `<select data-key="${f.key}">`+f.options.map(o=>`<option value="${o}" ${block.fields[f.key]===o?'selected':''}>${o}</option>`).join('')+`</select>`;
-      } else if(f.type==='selectDyn'){
-        const opts = f.options();
-        inputHtml = `<select data-key="${f.key}">`+opts.map(o=>`<option value="${o}" ${block.fields[f.key]===o?'selected':''}>${o}</option>`).join('')+`</select>`;
-      } else if(f.type==='color'){
-        inputHtml = `<input type="color" data-key="${f.key}" value="${block.fields[f.key]}">`;
-      } else if(f.type==='text'){
-        inputHtml = `<input type="text" data-key="${f.key}" value="${block.fields[f.key]}" style="width:70px">`;
-      } else if(f.type==='cond'){
-        inputHtml = renderCondEditor(block.fields[f.key]);
-      } else {
-        inputHtml = `<input type="number" data-key="${f.key}" value="${block.fields[f.key]}">`;
+    // main block element
+    const sb=makeBlockEl(block,def,sprite,stackIdx,blocks,bi,parentBlock,depth);
+    row.appendChild(sb);
+
+    // C-block body
+    if(def.shape==='cstart'||def.shape==='cif'||def.shape==='cifelse'){
+      const body=document.createElement('div');
+      body.className='c-body'+(block.body.length===0?' empty':'');
+      body.dataset.bodyTarget='body';
+      body.dataset.bi=bi;
+      body._blockRef=block;body._listRef=block.body;
+      setupDropZone(body,block.body,sprite,stackIdx,block,depth+1);
+      renderBlockList(body,block.body,sprite,stackIdx,block,depth+1);
+      row.appendChild(body);
+
+      if(def.shape==='cifelse'){
+        const elseLabel=document.createElement('div');
+        elseLabel.style.cssText='padding:3px 8px;font-size:10px;color:#fbbf24;background:rgba(0,0,0,.3);border-radius:0 0 0 5px;';
+        elseLabel.textContent='else';
+        row.appendChild(elseLabel);
+        const body2=document.createElement('div');
+        body2.className='c-body'+(block.body2.length===0?' empty':'');
+        body2.dataset.bodyTarget='body2';
+        body2._blockRef=block;body2._listRef=block.body2;
+        setupDropZone(body2,block.body2,sprite,stackIdx,block,depth+1);
+        renderBlockList(body2,block.body2,sprite,stackIdx,block,depth+1);
+        row.appendChild(body2);
       }
-      html = html.replace('['+f.key+']', inputHtml);
-    });
-    div.innerHTML = `<span class="delbtn">✕</span> ${html}`;
-
-    // delete (and children)
-    div.querySelector('.delbtn').onclick=(e)=>{
-      e.stopPropagation();
-      removeBlockAndAfter(topStack, blocks, i);
-      renderScriptArea();
-    };
-
-    // field inputs
-    div.querySelectorAll('[data-key]').forEach(inp=>{
-      inp.addEventListener('change',()=>{ block.fields[inp.dataset.key]=inp.value; });
-      inp.addEventListener('mousedown',e=>e.stopPropagation());
-    });
-    // cond editor sub-inputs
-    div.querySelectorAll('[data-condkey]').forEach(inp=>{
-      inp.addEventListener('change',()=>{ updateCondField(block.fields, inp); renderScriptArea(); });
-      inp.addEventListener('mousedown',e=>e.stopPropagation());
-    });
-
-    // dragging whole sub-chain (this block + everything after it in this list)
-    div.addEventListener('mousedown',(e)=>{
-      if(['SELECT','INPUT'].includes(e.target.tagName)||e.target.className==='delbtn') return;
-      startDragChain(blocks, i, topStack, e);
-      e.preventDefault();
-    });
-
-    wrap.appendChild(div);
-    yoff += 32;
-
-    // C-block body slots
-    if(def.shape==='cstart' || def.shape==='cif'){
-      const slot = document.createElement('div');
-      slot.className='cwrap';
-      slot.style.position='absolute';
-      slot.style.left='14px'; slot.style.top=yoff+'px';
-      slot.style.minHeight='28px'; slot.style.minWidth='160px';
-      slot.dataset.dropTarget='body';
-      renderStack(block.body, slot, topStack);
-      wrap.appendChild(slot);
-      const bh = Math.max(28, block.body.length*32+8);
-      yoff += bh + 6;
     }
-    if(def.shape==='cifelse'){
-      const slot1 = document.createElement('div');
-      slot1.className='cwrap'; slot1.style.position='absolute';
-      slot1.style.left='14px'; slot1.style.top=yoff+'px';
-      slot1.style.minHeight='28px'; slot1.style.minWidth='160px';
-      slot1.innerHTML='';
-      renderStack(block.body, slot1, topStack);
-      wrap.appendChild(slot1);
-      let bh1 = Math.max(28, block.body.length*32+8);
-      yoff += bh1+2;
-      const elseLabel=document.createElement('div');
-      elseLabel.style.position='absolute'; elseLabel.style.left='0px'; elseLabel.style.top=yoff+'px';
-      elseLabel.style.fontSize='10px'; elseLabel.style.color='#fbbf24'; elseLabel.textContent='else:';
-      wrap.appendChild(elseLabel);
-      yoff += 16;
-      const slot2 = document.createElement('div');
-      slot2.className='cwrap'; slot2.style.position='absolute';
-      slot2.style.left='14px'; slot2.style.top=yoff+'px';
-      slot2.style.minHeight='28px'; slot2.style.minWidth='160px';
-      renderStack(block.body2, slot2, topStack);
-      wrap.appendChild(slot2);
-      let bh2 = Math.max(28, block.body2.length*32+8);
-      yoff += bh2+6;
-    }
+    container.appendChild(row);
   });
-  wrap.style.minHeight = Math.max(4,yoff)+'px';
-  wrap.style.minWidth = '160px';
-  // store helper for drop detection
-  wrap._blocksRef = blocks;
 }
 
-function renderCondEditor(cond){
-  if(cond.op==='touching'){
-    return `<select data-condkey="op"><option value="touching" selected>touching</option><option value=">">&gt;</option><option value="<">&lt;</option><option value="=">=</option><option value="key">key down</option></select>
-      <select data-condkey="target">${sprites.map(s=>`<option value="${s.name}" ${cond.target===s.name?'selected':''}>${s.name}</option>`).join('')}</select>
-      dist&lt;<input type="number" data-condkey="dist" value="${cond.dist||1.5}" style="width:30px">`;
-  }
-  if(cond.op==='key'){
-    return `<select data-condkey="op"><option value="touching">touching</option><option value=">">&gt;</option><option value="<">&lt;</option><option value="=">=</option><option value="key" selected>key down</option></select>
-      <select data-condkey="key">${KEYOPTS.map(k=>`<option value="${k}" ${cond.key===k?'selected':''}>${k}</option>`).join('')}</select>`;
-  }
-  const varOpts = dynVarOptions();
-  return `<select data-condkey="op"><option value="touching">touching</option><option value=">" ${cond.op==='>'?'selected':''}>&gt;</option><option value="<" ${cond.op==='<'?'selected':''}>&lt;</option><option value="=" ${cond.op==='='?'selected':''}>=</option><option value="key">key down</option></select>
-    <select data-condkey="aType"><option value="var" ${cond.a.type==='var'?'selected':''}>var</option><option value="lit" ${cond.a.type==='lit'?'selected':''}>num</option></select>
-    ${cond.a.type==='var' ? `<select data-condkey="aName">${varOpts.map(o=>`<option value="${o}" ${cond.a.name===o?'selected':''}>${o}</option>`).join('')}</select>`
-      : `<input type="number" data-condkey="aVal" value="${cond.a.val||0}" style="width:30px">`}
-    <select data-condkey="bType"><option value="lit" ${cond.b.type==='lit'?'selected':''}>num</option><option value="var" ${cond.b.type==='var'?'selected':''}>var</option></select>
-    ${cond.b.type==='var' ? `<select data-condkey="bName">${varOpts.map(o=>`<option value="${o}" ${cond.b.name===o?'selected':''}>${o}</option>`).join('')}</select>`
-      : `<input type="number" data-condkey="bVal" value="${cond.b.val||0}" style="width:30px">`}`;
-}
-function updateCondField(fields, inp){
-  const cond = fields.cond;
-  const k = inp.dataset.condkey, v = inp.value;
-  if(k==='op'){
-    if(v==='touching'){ Object.assign(cond,{op:'touching',target:sprites[0]?sprites[0].name:'',dist:1.5}); }
-    else if(v==='key'){ Object.assign(cond,{op:'key',key:'space'}); }
-    else { cond.op=v; if(!cond.a) cond.a={type:'lit',val:0}; if(!cond.b) cond.b={type:'lit',val:0}; }
-  }
-  else if(k==='target') cond.target=v;
-  else if(k==='dist') cond.dist=Number(v);
-  else if(k==='key') cond.key=v;
-  else if(k==='aType') cond.a = cond.a.type===v? cond.a : (v==='var'?{type:'var',name:dynVarOptions()[0]}:{type:'lit',val:0});
-  else if(k==='aName') cond.a.name=v;
-  else if(k==='aVal') cond.a.val=Number(v);
-  else if(k==='bType') cond.b = cond.b.type===v? cond.b : (v==='var'?{type:'var',name:dynVarOptions()[0]}:{type:'lit',val:0});
-  else if(k==='bName') cond.b.name=v;
-  else if(k==='bVal') cond.b.val=Number(v);
-}
+function makeBlockEl(block,def,sprite,stackIdx,blockList,bi,parentBlock,depth){
+  const cc=CAT_COLORS[def.cat]||'bc-4d';
+  const sb=document.createElement('div');
+  sb.className='sb '+cc+(def.shape==='hat'?' hat':'');
 
-/* remove block at index i and everything after it from `blocks` array */
-function removeBlockAndAfter(topStack, blocks, i){
-  blocks.splice(i, blocks.length-i);
-  if(topStack.blocks.length===0){
-    activeSprite.scripts = activeSprite.scripts.filter(s=>s!==topStack);
-  }
-}
+  // build label with inline fields
+  let html=def.label;
+  def.fields.forEach(f=>{
+    let inp='';
+    if(f.t==='num') inp=`<input type="number" data-fk="${f.k}" value="${block.fields[f.k]}">`;
+    else if(f.t==='txt') inp=`<input type="text" data-fk="${f.k}" value="${block.fields[f.k]}" style="width:70px">`;
+    else if(f.t==='color') inp=`<input type="color" data-fk="${f.k}" value="${block.fields[f.k]}">`;
+    else if(f.t==='sel') inp=`<select data-fk="${f.k}">${f.o.map(o=>`<option ${block.fields[f.k]===o?'selected':''}>${o}</option>`).join('')}</select>`;
+    else if(f.t==='dsel'){const opts=f.o();inp=`<select data-fk="${f.k}">${opts.map(o=>`<option value="${o}" ${block.fields[f.k]===o?'selected':''}>${o}</option>`).join('')}</select>`;}
+    html=html.replace('['+f.k+']',inp);
+  });
+  html+=`<span class="del-block">✕</span>`;
+  sb.innerHTML=html;
 
-/* ============================================================
-   DRAG & DROP for reordering / nesting existing blocks
-   ============================================================ */
-let dragData=null;
-function startDragChain(blocks, idx, topStack, e){
-  const chain = blocks.splice(idx, blocks.length-idx); // remove this block + rest of chain
-  if(blocks.length===0 && topStack.blocks.length===0){
-    activeSprite.scripts = activeSprite.scripts.filter(s=>s!==topStack);
-  }
-  dragData = {chain};
-  renderScriptArea();
-  // ghost follow
-  const ghost = document.createElement('div');
-  ghost.id='dragGhost';
-  ghost.style.position='fixed'; ghost.style.pointerEvents='none'; ghost.style.zIndex=999;
-  ghost.style.padding='4px 8px'; ghost.style.background='#5b8def'; ghost.style.borderRadius='6px';
-  ghost.style.fontSize='11px'; ghost.style.color='#fff';
-  ghost.textContent = BLOCK_DEFS[chain[0].type].label.replace(/\[.*?\]/g,'_') + (chain.length>1?` (+${chain.length-1})`:'');
-  document.body.appendChild(ghost);
-  ghost.style.left=e.clientX+'px'; ghost.style.top=e.clientY+'px';
+  // field changes
+  sb.querySelectorAll('[data-fk]').forEach(el=>{
+    el.addEventListener('change',()=>{block.fields[el.dataset.fk]=el.value;refreshVarMonitor();});
+    el.addEventListener('mousedown',e=>e.stopPropagation());
+    el.addEventListener('click',e=>e.stopPropagation());
+  });
+  // delete block
+  sb.querySelector('.del-block').addEventListener('click',e=>{
+    e.stopPropagation();
+    blockList.splice(bi,1);
+    refreshScriptArea();
+  });
 
-  function move(ev){
-    ghost.style.left=ev.clientX+'px'; ghost.style.top=ev.clientY+'px';
-  }
-  function up(ev){
-    document.removeEventListener('mousemove',move);
-    document.removeEventListener('mouseup',up);
-    ghost.remove();
-    handleDrop(ev.clientX, ev.clientY);
-    dragData=null;
-  }
-  document.addEventListener('mousemove',move);
-  document.addEventListener('mouseup',up);
+  // drag existing block
+  sb.addEventListener('mousedown',e=>{
+    if(['INPUT','SELECT'].includes(e.target.tagName)||e.target.classList.contains('del-block'))return;
+    e.stopPropagation();
+    e.preventDefault();
+    // pick up this block and everything after it in same list
+    const chain=blockList.splice(bi);
+    if(blockList.length===0&&parentBlock===null){
+      activeSprite.scripts=activeSprite.scripts.filter((_,i)=>i!==stackIdx);
+    }
+    refreshScriptArea();
+    startBlockDrag(chain,e.clientX,e.clientY);
+  });
+
+  // drop zone: drop onto this block = insert after
+  sb.addEventListener('dragover',e=>{e.preventDefault();sb.classList.add('snap-hint');});
+  sb.addEventListener('dragleave',()=>sb.classList.remove('snap-hint'));
+  sb.addEventListener('drop',e=>{
+    e.preventDefault();e.stopPropagation();sb.classList.remove('snap-hint');
+    const data=tryGetDragData(e);if(!data)return;
+    const chain=chainFromData(data);if(!chain)return;
+    // insert after bi in blockList
+    blockList.splice(bi+1,0,...chain);
+    refreshScriptArea();
+  });
+
+  return sb;
 }
 
-function handleDrop(clientX, clientY){
-  if(!dragData) return;
-  const area = document.getElementById('scriptArea');
-  const rect = area.getBoundingClientRect();
-  const x = clientX-rect.left+area.scrollLeft, y = clientY-rect.top+area.scrollTop;
+function setupDropZone(el,list,sprite,stackIdx,parentBlock,depth){
+  el.addEventListener('dragover',e=>{e.preventDefault();el.style.outline='2px dashed #fff';});
+  el.addEventListener('dragleave',()=>el.style.outline='');
+  el.addEventListener('drop',e=>{
+    e.preventDefault();e.stopPropagation();el.style.outline='';
+    const data=tryGetDragData(e);if(!data)return;
+    const chain=chainFromData(data);if(!chain)return;
+    list.push(...chain);
+    refreshScriptArea();
+  });
+}
 
-  // try find a block under cursor to attach below, or a cwrap slot to drop into
-  const els = document.elementsFromPoint(clientX,clientY);
-  // check for cwrap slot (empty area inside C-block)
+/* =====================================================================
+   DRAG SYSTEM (mouse-based ghost drag, works for both palette + existing)
+   ===================================================================== */
+let activeDrag=null;// {chain, ghost, fromPalette}
+const ghost=document.getElementById('dragGhost');
+
+function startPaletteDrag(key,e){
+  const chain=[newBlock(key)];
+  _startDrag(chain,true,e);
+}
+function startBlockDrag(chain,cx,cy){
+  _startDrag(chain,false,{clientX:cx,clientY:cy});
+}
+function _startDrag(chain,fromPalette,e){
+  activeDrag={chain,fromPalette};
+  const def=BD[chain[0].type];
+  ghost.textContent=(def.label.replace(/\[[^\]]+\]/g,'_'))+(chain.length>1?` +${chain.length-1}`:'');
+  ghost.className='dragGhost '+(CAT_COLORS[def.cat]||'bc-4d');
+  ghost.style.display='block';
+  ghost.style.left=e.clientX+8+'px';
+  ghost.style.top=e.clientY+8+'px';
+}
+
+document.addEventListener('mousemove',e=>{
+  if(!activeDrag)return;
+  ghost.style.left=e.clientX+8+'px';
+  ghost.style.top=e.clientY+8+'px';
+});
+
+document.addEventListener('mouseup',e=>{
+  if(!activeDrag)return;
+  ghost.style.display='none';
+  const chain=activeDrag.chain;
+  activeDrag=null;
+  if(!activeSprite)return;
+
+  // find drop target
+  const els=document.elementsFromPoint(e.clientX,e.clientY);
+
+  // 1. dropped on a c-body slot?
   for(const el of els){
-    if(el.classList && el.classList.contains('cwrap') && el._blocksRef){
-      el._blocksRef.push(...dragData.chain);
-      renderScriptArea();
-      return;
+    if(el.classList&&el.classList.contains('c-body')&&el._listRef){
+      el._listRef.push(...chain);
+      refreshScriptArea();return;
     }
   }
+  // 2. dropped on a script-block → insert after
   for(const el of els){
-    if(el.classList && el.classList.contains('script-block')){
-      // find its containing list & index via closest wrap
-      const parentWrap = el.parentElement;
-      if(parentWrap && parentWrap._blocksRef){
-        const idx = Array.from(parentWrap.children).filter(c=>c.classList.contains('script-block')).indexOf(el);
-        parentWrap._blocksRef.splice(idx+1,0,...dragData.chain);
-        renderScriptArea();
-        return;
+    if(el.classList&&el.classList.contains('sb')){
+      // find parent row → block index
+      const row=el.parentElement;
+      if(!row||!row.dataset.bi)break;
+      const bi=+row.dataset.bi;
+      // find which stack wrap
+      let wrap=row.parentElement;
+      while(wrap&&!wrap.dataset.stackIdx&&!wrap.classList.contains('c-body'))wrap=wrap.parentElement;
+      if(wrap&&wrap._listRef){
+        wrap._listRef.splice(bi+1,0,...chain);
+        refreshScriptArea();return;
       }
+      if(wrap&&wrap.dataset.stackIdx){
+        const si=+wrap.dataset.stackIdx;
+        activeSprite.scripts[si].blocks.splice(bi+1,0,...chain);
+        refreshScriptArea();return;
+      }
+      break;
     }
   }
-  // else: place as new top-level stack at drop position
-  activeSprite.scripts.push({x, y, blocks: dragData.chain});
-  renderScriptArea();
-}
+  // 3. dropped on script area canvas → new stack
+  const area=document.getElementById('scriptArea');
+  const rect=area.getBoundingClientRect();
+  if(e.clientX>rect.left&&e.clientX<rect.right&&e.clientY>rect.top&&e.clientY<rect.bottom){
+    const x=e.clientX-rect.left+area.scrollLeft;
+    const y=e.clientY-rect.top+area.scrollTop;
+    activeSprite.scripts.push({x,y,blocks:chain});
+    refreshScriptArea();
+  }
+});
 
-/* drop NEW block from palette */
-const scriptArea = document.getElementById('scriptArea');
-scriptArea.addEventListener('dragover', e=>e.preventDefault());
-scriptArea.addEventListener('drop', e=>{
+// HTML5 drag API fallback (for browsers that need it)
+function tryGetDragData(e){try{return JSON.parse(e.dataTransfer.getData('text/plain'));}catch{return null;}}
+function chainFromData(data){
+  if(!data)return null;
+  if(data.src==='palette')return[newBlock(data.key)];
+  return null;
+}
+document.getElementById('scriptArea').addEventListener('dragover',e=>{e.preventDefault();});
+document.getElementById('scriptArea').addEventListener('drop',e=>{
   e.preventDefault();
-  if(!activeSprite) return;
-  const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-  if(data.type!=='new') return;
-  const newBlock = newBlockFromType(data.blockType);
-  const rect = scriptArea.getBoundingClientRect();
-  const x = e.clientX-rect.left+scriptArea.scrollLeft, y = e.clientY-rect.top+scriptArea.scrollTop;
-
-  // try attach to existing block / slot
-  const els = document.elementsFromPoint(e.clientX,e.clientY);
+  const data=tryGetDragData(e);if(!data||!activeSprite)return;
+  const chain=chainFromData(data);if(!chain)return;
+  const rect=e.currentTarget.getBoundingClientRect();
+  const x=e.clientX-rect.left+e.currentTarget.scrollLeft;
+  const y=e.clientY-rect.top+e.currentTarget.scrollTop;
+  // check if landed on existing block first
+  const els=document.elementsFromPoint(e.clientX,e.clientY);
   for(const el of els){
-    if(el.classList && el.classList.contains('cwrap') && el._blocksRef){
-      el._blocksRef.push(newBlock);
-      renderScriptArea(); return;
-    }
+    if(el.classList&&el.classList.contains('c-body')&&el._listRef){el._listRef.push(...chain);refreshScriptArea();return;}
   }
   for(const el of els){
-    if(el.classList && el.classList.contains('script-block')){
-      const parentWrap = el.parentElement;
-      if(parentWrap && parentWrap._blocksRef){
-        const idx = Array.from(parentWrap.children).filter(c=>c.classList.contains('script-block')).indexOf(el);
-        parentWrap._blocksRef.splice(idx+1,0,newBlock);
-        renderScriptArea(); return;
+    if(el.classList&&el.classList.contains('sb')){
+      const row=el.parentElement;
+      if(row&&row.dataset.bi){
+        const bi=+row.dataset.bi;
+        let wrap=row.parentElement;
+        while(wrap&&!wrap.dataset.stackIdx&&!wrap.classList.contains('c-body'))wrap=wrap.parentElement;
+        if(wrap&&wrap._listRef){wrap._listRef.splice(bi+1,0,...chain);refreshScriptArea();return;}
+        if(wrap&&wrap.dataset.stackIdx){const si=+wrap.dataset.stackIdx;activeSprite.scripts[si].blocks.splice(bi+1,0,...chain);refreshScriptArea();return;}
       }
     }
   }
-  activeSprite.scripts.push({x,y,blocks:[newBlock]});
-  renderScriptArea();
+  activeSprite.scripts.push({x,y,blocks:chain});
+  refreshScriptArea();
 });
 </script>
 
 <script>
-/* ============================================================
-   PROJECTION & RENDERING (4D -> 3D -> 2D)
-   ============================================================ */
-const canvas = document.getElementById('stage');
-const ctx = canvas.getContext('2d');
+/* =====================================================================
+   STAGE RENDERING
+   ===================================================================== */
+const canvas=document.getElementById('stage');
+const ctx2d=canvas.getContext('2d');
 
-function project4Dto3D(v, wDist=3){
-  const wf = wDist/(wDist - v[3]);
-  return [v[0]*wf, v[1]*wf, v[2]*wf];
-}
-function project3Dto2D(v, dist=4){
-  const f = dist/(dist - v[2]);
-  return [v[0]*f, v[1]*f];
-}
-function drawSprite(s){
-  if(!s.visible) return;
-  const {verts, edges} = s.geom;
-  const pts2d = verts.map(v=>{
-    let p = v.map(x=>x*s.scale);
-    for(const plane of PLANES) if(s.rot[plane]) p = rotate4D(p, plane, s.rot[plane]);
-    p = [p[0]+s.x, p[1]+s.y, p[2]+s.z, p[3]+s.w];
-    const p3 = project4Dto3D(p);
-    return project3Dto2D(p3);
+function drawSprite4D(s){
+  if(!s.visible)return;
+  const{verts,edges}=s.geom;
+  const pts=verts.map(v=>{
+    let p=v.map(x=>x*s.scale);
+    PLANEOPTS.forEach(pl=>{if(s.rot[pl])p=rotate4D(p,pl,s.rot[pl]);});
+    p=[p[0]+s.x,p[1]+s.y,p[2]+s.z,p[3]+s.w];
+    const p3=proj4to3(p);return proj3to2(p3);
   });
-  ctx.strokeStyle = s.color;
-  ctx.lineWidth = (s===activeSprite)?2:1;
+  const cx=canvas.width/2,cy=canvas.height/2,sc=55;
+  ctx2d.strokeStyle=s.color;
+  ctx2d.lineWidth=s===activeSprite?2:1;
+  ctx2d.globalAlpha=0.85;
   edges.forEach(([a,b])=>{
-    const pa=pts2d[a], pb=pts2d[b];
-    ctx.beginPath();
-    ctx.moveTo(canvas.width/2 + pa[0]*60, canvas.height/2 + pa[1]*60);
-    ctx.lineTo(canvas.width/2 + pb[0]*60, canvas.height/2 + pb[1]*60);
-    ctx.stroke();
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx+pts[a][0]*sc,cy+pts[a][1]*sc);
+    ctx2d.lineTo(cx+pts[b][0]*sc,cy+pts[b][1]*sc);
+    ctx2d.stroke();
   });
-}
-let currentMessage='';
-function renderStage(){
-  if(!ctx) return;
-  ctx.fillStyle='#0a0a14';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  sprites.forEach(drawSprite);
-  if(currentMessage){
-    ctx.fillStyle='#fff'; ctx.font='14px Arial';
-    ctx.fillText(currentMessage, 10, canvas.height-10);
+  ctx2d.globalAlpha=1;
+  // speech bubble
+  if(currentMessages[s.id]){
+    const px=cx+s.x*sc,py=cy+s.y*sc-60;
+    ctx2d.fillStyle='#fff';ctx2d.fillRect(px-2,py-14,currentMessages[s.id].length*7+8,18);
+    ctx2d.fillStyle='#000';ctx2d.font='11px Arial';ctx2d.fillText(currentMessages[s.id],px+2,py);
   }
-  renderVarPanel();
 }
 
-/* ============================================================
-   RUNTIME / INTERPRETER  (recursive, frame-stepped via generators)
-   ============================================================ */
-let running=false;
-let keys={}, prevKeys={};
-let runtimeState=new Map();
-let receivedMsgs=new Set();
-let pendingMsgs=new Set();
+function renderStage(){
+  ctx2d.fillStyle='#080812';ctx2d.fillRect(0,0,canvas.width,canvas.height);
+  // grid
+  ctx2d.strokeStyle='#1a1b30';ctx2d.lineWidth=1;
+  for(let i=0;i<canvas.width;i+=40){ctx2d.beginPath();ctx2d.moveTo(i,0);ctx2d.lineTo(i,canvas.height);ctx2d.stroke();}
+  for(let i=0;i<canvas.height;i+=40){ctx2d.beginPath();ctx2d.moveTo(0,i);ctx2d.lineTo(canvas.width,i);ctx2d.stroke();}
+  // axes
+  const cx=canvas.width/2,cy=canvas.height/2;
+  ctx2d.strokeStyle='#2a2a50';ctx2d.lineWidth=1;
+  ctx2d.beginPath();ctx2d.moveTo(0,cy);ctx2d.lineTo(canvas.width,cy);ctx2d.stroke();
+  ctx2d.beginPath();ctx2d.moveTo(cx,0);ctx2d.lineTo(cx,canvas.height);ctx2d.stroke();
 
-window.addEventListener('keydown', e=>{
-  const k=e.key.toLowerCase();
-  const map={'arrowup':'up','arrowdown':'down','arrowleft':'left','arrowright':'right',' ':'space'};
-  keys[map[k]||k]=true;
-});
-window.addEventListener('keyup', e=>{
-  const k=e.key.toLowerCase();
-  const map={'arrowup':'up','arrowdown':'down','arrowleft':'left','arrowright':'right',' ':'space'};
-  keys[map[k]||k]=false;
-});
+  sprites.forEach(drawSprite4D);
 
-function runProject(){
-  running=true;
-  runtimeState=new Map();
-  receivedMsgs=new Set();
-  loop();
+  // FPS
+  const now=performance.now();frameCount++;
+  if(now-lastFpsTime>500){lastFps=Math.round(frameCount*1000/(now-lastFpsTime));frameCount=0;lastFpsTime=now;document.getElementById('fps').textContent=lastFps+'fps';}
+  refreshVarMonitor();
 }
-function stopProject(){ running=false; }
 
-// Build a generator that executes a block list, yielding 'frame' to pause for one frame
-function* execBlocks(blocks, s, ctx, statePathPrefix){
+/* =====================================================================
+   RUNTIME / INTERPRETER
+   ===================================================================== */
+let runtimeGens=[];// [{sprite, gen, key}]
+
+function* execBlockList(blocks,sprite,C,path){
   for(let i=0;i<blocks.length;i++){
-    const b = blocks[i];
-    const def = BLOCK_DEFS[b.type];
-    const path = statePathPrefix+'/'+i;
+    const b=blocks[i];const def=BD[b.type];if(!def)continue;
+    const bpath=path+'/'+i;
     if(def.shape==='cstart'){
-      let st = runtimeState.get(path)||{};
-      if(def.init) def.init(st,b.fields);
-      runtimeState.set(path,st);
+      const st={};if(def.init)def.init(st,b.fields);
       while(true){
-        const r = def.run(s,b.fields,ctx,st,b);
-        if(r==='repeat'){
-          yield* execBlocks(b.body, s, ctx, path+'/b');
-          yield 'frame';
-        } else break;
+        const r=def.run?def.run(sprite,b.fields,C,st):undefined;
+        if(r==='repeat'){yield* execBlockList(b.body,sprite,C,bpath+'/body');yield'frame';}
+        else break;
       }
     } else if(def.shape==='cif'){
-      if(evalCond(s,b.fields.cond,ctx)){
-        yield* execBlocks(b.body, s, ctx, path+'/b');
-      }
+      if(def.cond?def.cond(sprite,b.fields,C):false)yield* execBlockList(b.body,sprite,C,bpath+'/body');
     } else if(def.shape==='cifelse'){
-      if(evalCond(s,b.fields.cond,ctx)){
-        yield* execBlocks(b.body, s, ctx, path+'/b1');
-      } else {
-        yield* execBlocks(b.body2, s, ctx, path+'/b2');
-      }
+      if(def.cond?def.cond(sprite,b.fields,C):false)yield* execBlockList(b.body,sprite,C,bpath+'/b1');
+      else yield* execBlockList(b.body2,sprite,C,bpath+'/b2');
     } else {
-      let st = runtimeState.get(path)||{};
-      while(true){
-        const r = def.run(s,b.fields,ctx,st,b);
-        runtimeState.set(path,st);
-        if(r==='wait'){ yield 'frame'; continue; }
-        break;
-      }
+      const st={};
+      let r;
+      do{r=def.run?def.run(sprite,b.fields,C,st):undefined;if(r==='wait')yield'frame';}while(r==='wait');
+      if(r==='stop')return;
     }
+    if(C.stopAll)return;
   }
 }
 
-// per-sprite, per-script generator instances
-let activeGens = []; // {s, gen, scriptId}
-
-function startScripts(){
-  activeGens=[];
+function runProject(){
+  running=true;runtimeGens=[];
+  Object.assign(keys,{});prevKeys={};
+  currentMessages={};receivedBroadcasts=new Set();pendingBroadcasts=new Set();
+  // spawn hat scripts
   sprites.forEach(s=>{
-    s.scripts.forEach((stack,idx)=>{
-      const hat = stack.blocks[0];
-      if(!hat) return;
-      const def = BLOCK_DEFS[hat.type];
-      if(!def || !def.isHat) return;
-      activeGens.push({s, stack, idx});
+    s.scripts.forEach((stack,si)=>{
+      const hat=stack.blocks[0];if(!hat)return;
+      const def=BD[hat.type];if(!def||!def.isHat)return;
+      if(hat.type==='whenFlag'){
+        const gen=execBlockList(stack.blocks.slice(1),s,makeCtx(),'s'+s.id+'_'+si);
+        runtimeGens.push({sprite:s,stack,si,gen,hatType:'flag',done:false});
+      } else {
+        runtimeGens.push({sprite:s,stack,si,gen:null,hatType:hat.type,done:false});
+      }
     });
   });
+  loop();
 }
-startScripts();
+function stopProject(){running=false;}
+
+function makeCtx(){
+  return{keys,prevKeys,received:receivedBroadcasts,toSend:pendingBroadcasts,stopAll:false};
+}
 
 function loop(){
-  if(!running) return;
-  prevKeys = Object.assign({},keys);
-  const ctx = {keys, prevKeys, message:currentMessage, toSend:new Set(), received: receivedMsgs, stopAll:false};
+  if(!running)return;
+  prevKeys=Object.assign({},keys);
+  const C=makeCtx();
+  C.received=receivedBroadcasts;
+  C.toSend=new Set();
 
-  // refresh script list in case user edited while running
-  startScripts();
-
-  for(const entry of activeGens){
-    const {s, stack, idx} = entry;
-    const hat = stack.blocks[0];
-    const def = BLOCK_DEFS[hat.type];
-    const key = 'gen_'+s.id+'_'+idx;
-    let triggered=false;
-    if(hat.type==='whenFlag') triggered = !runtimeState.get(key+'_done');
-    else if(def.test) triggered = def.test(s,hat.fields,ctx);
-
-    let gs = runtimeState.get(key);
-    if(triggered && !gs){
-      gs = execBlocks(stack.blocks.slice(1), s, ctx, key);
-      runtimeState.set(key, gs);
-      if(hat.type==='whenFlag') runtimeState.set(key+'_done', true);
+  // run existing generators
+  const newGens=[];
+  for(const entry of runtimeGens){
+    // trigger new generators for event hats
+    if(!entry.gen&&!entry.done){
+      const hat=entry.stack.blocks[0];const def=BD[hat.type];
+      let fire=false;
+      if(def.hatTest)fire=def.hatTest(entry.sprite,hat.fields,C);
+      if(fire){
+        entry.gen=execBlockList(entry.stack.blocks.slice(1),entry.sprite,C,'s'+entry.sprite.id+'_'+entry.si);
+      }
     }
-    if(gs){
-      try {
-        const r = gs.next();
-        if(r.done) runtimeState.delete(key);
-      } catch(err){ console.error(err); runtimeState.delete(key); }
+    if(entry.gen){
+      try{
+        const r=entry.gen.next();
+        if(r.done){entry.gen=null;entry.done=(entry.hatType==='flag');}
+      }catch(err){console.error(err);entry.gen=null;}
     }
+    // keep event hats alive (they can retrigger), remove done flag-hats
+    if(!entry.done||entry.hatType!=='flag')newGens.push(entry);
+  }
+  runtimeGens=newGens;
+
+  // process broadcasts
+  receivedBroadcasts=C.toSend;
+  // spawn broadcast receivers
+  if(C.toSend.size>0){
+    sprites.forEach(s=>{
+      s.scripts.forEach((stack,si)=>{
+        const hat=stack.blocks[0];if(!hat)return;
+        if(hat.type!=='whenReceive')return;
+        if(C.toSend.has(hat.fields.msg)){
+          const gen=execBlockList(stack.blocks.slice(1),s,C,'br_'+s.id+'_'+si+'_'+Date.now());
+          runtimeGens.push({sprite:s,stack,si,gen,hatType:'broadcast',done:false});
+        }
+      });
+    });
   }
 
-  // collisions auto-stop velocity at... handled via blocks only
-  receivedMsgs = ctx.toSend;
-  currentMessage = ctx.message;
-  if(ctx.stopAll){ running=false; renderStage(); return; }
+  if(C.stopAll){running=false;renderStage();return;}
   renderStage();
   requestAnimationFrame(loop);
 }
 
-/* ============================================================
+/* =====================================================================
+   KEYBOARD
+   ===================================================================== */
+window.addEventListener('keydown',e=>{
+  const m={'ArrowUp':'up','ArrowDown':'down','ArrowLeft':'left','ArrowRight':'right',' ':'space'};
+  keys[m[e.key]||e.key.toLowerCase()]=true;
+});
+window.addEventListener('keyup',e=>{
+  const m={'ArrowUp':'up','ArrowDown':'down','ArrowLeft':'left','ArrowRight':'right',' ':'space'};
+  keys[m[e.key]||e.key.toLowerCase()]=false;
+});
+
+/* =====================================================================
    SAVE / LOAD
-   ============================================================ */
+   ===================================================================== */
 function saveProject(){
-  const data = {
-    nextId, globalVars, broadcasts:[...broadcasts],
-    sprites: sprites.map(s=>({
-      id:s.id,name:s.name,shape:s.shape,x:s.x,y:s.y,z:s.z,w:s.w,
-      rot:s.rot,scale:s.scale,color:s.color,visible:s.visible,
-      scripts:s.scripts, vars:s.vars
-    }))
-  };
-  const blob = new Blob([JSON.stringify(data)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download='4dscratch-project.json'; a.click();
+  const data={nextId,globalVars,broadcasts:[...broadcasts],
+    sprites:sprites.map(s=>({id:s.id,name:s.name,shape:s.shape,x:s.x,y:s.y,z:s.z,w:s.w,vx:s.vx,vy:s.vy,vz:s.vz,vw:s.vw,rot:s.rot,scale:s.scale,color:s.color,visible:s.visible,scripts:s.scripts,vars:s.vars}))};
+  const b=new Blob([JSON.stringify(data)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='4dscratch.json';a.click();
 }
-function loadProject(ev){
-  const file=ev.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    const data=JSON.parse(reader.result);
-    nextId=data.nextId; globalVars=data.globalVars||{}; broadcasts=new Set(data.broadcasts||['Message1','Message2']);
-    sprites = data.sprites.map(sd=>{
-      const s = Object.assign({geom:SHAPE_MAKERS[sd.shape](), vx:0,vy:0,vz:0,vw:0}, sd);
-      return s;
-    });
-    activeSprite = sprites[0]||null;
-    renderSpriteList(); renderScriptArea(); renderVarPanel(); renderPalette(); renderStage();
+function loadProjectFile(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    const d=JSON.parse(r.result);
+    nextId=d.nextId||1;globalVars=d.globalVars||{};broadcasts=new Set(d.broadcasts||['Start','GameOver','Win']);
+    sprites=d.sprites.map(sd=>{const s=Object.assign(makeSprite(sd.shape),sd);s.geom=GEOM_MAKERS[sd.shape]();s._gens=new Map();return s;});
+    activeSprite=sprites[0]||null;
+    refreshSpriteList();refreshScriptArea();refreshPalette();renderStage();
   };
-  reader.readAsText(file);
+  r.readAsText(f);
 }
 
-/* initial render */
-renderStage();
-addSprite('tesseract');
+/* =====================================================================
+   INIT
+   ===================================================================== */
+document.getElementById('btnRun').onclick=runProject;
+document.getElementById('btnStop').onclick=stopProject;
+document.getElementById('btnSave').onclick=saveProject;
+document.getElementById('btnLoad').onclick=()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').addEventListener('change',loadProjectFile);
 canvas.tabIndex=0;
 canvas.addEventListener('click',()=>canvas.focus());
+canvas.addEventListener('mousedown',()=>canvas.focus());
+
+refreshPalette();
+addSprite('tesseract');
+renderStage();
 </script>
 </body>
 </html>
