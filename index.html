@@ -938,68 +938,78 @@ function runProject(){
   });
   loop();
 }
-function stopProject(){running=false;}
+function stopProject(){
+  running=false;
+  document.getElementById('stageInfo').textContent='Stopped. Click ▶ Run to start.';
+}
 
 function loop(){
   if(!running)return;
-  prevKeys=Object.assign({},keys);
-
-  // Update shared context in-place so all generators see current state
-  sharedC.keys=keys;
-  sharedC.prevKeys=prevKeys;
-  sharedC.received=receivedBroadcasts;
-  sharedC.toSend=new Set();
-  sharedC.stopAll=false;
-
-  const newGens=[];
-  for(const entry of runtimeGens){
-    // Fire event hats if condition met and no active generator
-    if(!entry.gen&&entry.hatType!=='flag'){
-      const hat=entry.stack.blocks[0];
-      const def=BD[hat.type];
-      let fire=false;
-      if(def&&def.hatTest)fire=def.hatTest(entry.sprite,hat.fields,sharedC);
-      if(fire){
-        entry.gen=execBlockList(entry.stack.blocks.slice(1),entry.sprite,'s'+entry.sprite.id+'_'+entry.si);
-      }
-    }
-    // Advance generator one step (one 'frame' yield)
-    if(entry.gen){
-      try{
-        const r=entry.gen.next();
-        if(r.done){
-          entry.gen=null;
-          // Flag scripts that finish (non-forever) just stop — don't re-run
-          // Event scripts reset so they can fire again
-        }
-      }catch(err){console.error('Script error:',err);entry.gen=null;}
-    }
-    // Always keep entries alive — flag scripts may finish but event scripts must persist
-    newGens.push(entry);
-  }
-  runtimeGens=newGens;
-
-  // Handle broadcasts — spawn receivers
-  receivedBroadcasts=sharedC.toSend;
-  if(sharedC.toSend.size>0){
-    sprites.forEach(s=>{
-      s.scripts.forEach((stack,si)=>{
-        const hat=stack.blocks[0];if(!hat||hat.type!=='whenReceive')return;
-        if(sharedC.toSend.has(hat.fields.msg)){
-          // Only spawn if not already running
-          const alreadyRunning=runtimeGens.some(e=>e.sprite===s&&e.si===si&&e.gen);
-          if(!alreadyRunning){
-            const gen=execBlockList(stack.blocks.slice(1),s,'br_'+s.id+'_'+si+'_'+Date.now());
-            runtimeGens.push({sprite:s,stack,si,gen,hatType:'broadcast'});
-          }
-        }
-      });
-    });
-  }
-
-  if(sharedC.stopAll){running=false;renderStage();return;}
-  renderStage();
+  // Schedule NEXT frame immediately — nothing can prevent it now
   requestAnimationFrame(loop);
+
+  try{
+    prevKeys=Object.assign({},keys);
+
+    // Update shared context in-place so all generators see current state
+    sharedC.keys=keys;
+    sharedC.prevKeys=prevKeys;
+    sharedC.received=receivedBroadcasts;
+    sharedC.toSend=new Set();
+    sharedC.stopAll=false;
+
+    const newGens=[];
+    for(const entry of runtimeGens){
+      // Fire event hats if condition met and no active generator
+      if(!entry.gen&&entry.hatType!=='flag'){
+        const hat=entry.stack.blocks[0];
+        const def=BD[hat.type];
+        let fire=false;
+        try{ if(def&&def.hatTest)fire=def.hatTest(entry.sprite,hat.fields,sharedC); }catch(e){}
+        if(fire){
+          entry.gen=execBlockList(entry.stack.blocks.slice(1),entry.sprite,'s'+entry.sprite.id+'_'+entry.si);
+        }
+      }
+      // Advance generator one step per frame
+      if(entry.gen){
+        try{
+          const r=entry.gen.next();
+          if(r.done){ entry.gen=null; }
+        }catch(err){
+          console.warn('Script error in',entry.sprite.name,':',err.message);
+          document.getElementById('stageInfo').textContent='⚠ Script error in '+entry.sprite.name+': '+err.message;
+          entry.gen=null;
+        }
+      }
+      newGens.push(entry);
+    }
+    runtimeGens=newGens;
+
+    // Handle broadcasts — spawn receivers
+    receivedBroadcasts=sharedC.toSend;
+    if(sharedC.toSend.size>0){
+      sprites.forEach(s=>{
+        s.scripts.forEach((stack,si)=>{
+          const hat=stack.blocks[0];if(!hat||hat.type!=='whenReceive')return;
+          if(sharedC.toSend.has(hat.fields.msg)){
+            const alreadyRunning=runtimeGens.some(e=>e.sprite===s&&e.si===si&&e.gen);
+            if(!alreadyRunning){
+              const gen=execBlockList(stack.blocks.slice(1),s,'br_'+s.id+'_'+si+'_'+Date.now());
+              runtimeGens.push({sprite:s,stack,si,gen,hatType:'broadcast'});
+            }
+          }
+        });
+      });
+    }
+
+    if(sharedC.stopAll){running=false;}
+    renderStage();
+  }catch(fatalErr){
+    console.error('Fatal loop error:',fatalErr);
+    document.getElementById('stageInfo').textContent='⚠ Fatal error: '+fatalErr.message;
+    // Don't stop — next frame already scheduled above
+    try{renderStage();}catch(e){}
+  }
 }
 
 /* =====================================================================
