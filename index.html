@@ -224,9 +224,8 @@ let globalVars={};
 let broadcasts=new Set(['Start','GameOver','Win']);
 let keys={},prevKeys={};
 let running=false,frameCount=0,lastFps=0,lastFpsTime=0;
-let currentMessages={};// spriteId->text
+let currentMessages={};
 let receivedBroadcasts=new Set();
-let pendingBroadcasts=new Set();
 
 /* =====================================================================
    SPRITE MODEL
@@ -875,49 +874,65 @@ function renderStage(){
 
 /* =====================================================================
    RUNTIME / INTERPRETER
+   C is a SHARED object mutated each frame so generators always see current state.
    ===================================================================== */
-let runtimeGens=[];// [{sprite, gen, key}]
+let runtimeGens=[];
+// Shared context — generators hold a reference to this object, we mutate it each frame
+const sharedC={keys,prevKeys,received:new Set(),toSend:new Set(),stopAll:false};
 
-function* execBlockList(blocks,sprite,C,path){
+function* execBlockList(blocks,sprite,path){
   for(let i=0;i<blocks.length;i++){
     const b=blocks[i];const def=BD[b.type];if(!def)continue;
     const bpath=path+'/'+i;
     if(def.shape==='cstart'){
       const st={};if(def.init)def.init(st,b.fields);
       while(true){
-        const r=def.run?def.run(sprite,b.fields,C,st):undefined;
-        if(r==='repeat'){yield* execBlockList(b.body,sprite,C,bpath+'/body');yield'frame';}
-        else break;
+        const r=def.run?def.run(sprite,b.fields,sharedC,st):undefined;
+        if(r==='repeat'){
+          yield* execBlockList(b.body,sprite,bpath+'/body');
+          yield'frame'; // pause after each loop iteration
+          // re-init repeat counter is NOT needed — st persists across yields which is correct
+        } else break;
       }
     } else if(def.shape==='cif'){
-      if(def.cond?def.cond(sprite,b.fields,C):false)yield* execBlockList(b.body,sprite,C,bpath+'/body');
+      if(def.cond?def.cond(sprite,b.fields,sharedC):false)
+        yield* execBlockList(b.body,sprite,bpath+'/body');
     } else if(def.shape==='cifelse'){
-      if(def.cond?def.cond(sprite,b.fields,C):false)yield* execBlockList(b.body,sprite,C,bpath+'/b1');
-      else yield* execBlockList(b.body2,sprite,C,bpath+'/b2');
+      if(def.cond?def.cond(sprite,b.fields,sharedC):false)
+        yield* execBlockList(b.body,sprite,bpath+'/b1');
+      else
+        yield* execBlockList(b.body2,sprite,bpath+'/b2');
     } else {
       const st={};
       let r;
-      do{r=def.run?def.run(sprite,b.fields,C,st):undefined;if(r==='wait')yield'frame';}while(r==='wait');
+      do{
+        r=def.run?def.run(sprite,b.fields,sharedC,st):undefined;
+        if(r==='wait')yield'frame';
+      }while(r==='wait');
       if(r==='stop')return;
     }
-    if(C.stopAll)return;
+    if(sharedC.stopAll)return;
   }
 }
 
 function runProject(){
   running=true;runtimeGens=[];
-  Object.assign(keys,{});prevKeys={};
-  currentMessages={};receivedBroadcasts=new Set();pendingBroadcasts=new Set();
-  // spawn hat scripts
+  for(const k in keys)keys[k]=false;
+  prevKeys={};
+  currentMessages={};
+  receivedBroadcasts=new Set();
+  // spawn all hat scripts
   sprites.forEach(s=>{
     s.scripts.forEach((stack,si)=>{
       const hat=stack.blocks[0];if(!hat)return;
       const def=BD[hat.type];if(!def||!def.isHat)return;
       if(hat.type==='whenFlag'){
-        const gen=execBlockList(stack.blocks.slice(1),s,makeCtx(),'s'+s.id+'_'+si);
-        runtimeGens.push({sprite:s,stack,si,gen,hatType:'flag',done:false});
+        // Flag scripts: create generator immediately, run until completion (handles forever internally)
+        const gen=execBlockList(stack.blocks.slice(1),s,'s'+s.id+'_'+si);
+        runtimeGens.push({sprite:s,stack,si,gen,hatType:'flag'});
       } else {
-        runtimeGens.push({sprite:s,stack,si,gen:null,hatType:hat.type,done:false});
+        // Event scripts: no generator yet, will be created when triggered
+        runtimeGens.push({sprite:s,stack,si,gen:null,hatType:hat.type});
       }
     });
   });
@@ -925,57 +940,64 @@ function runProject(){
 }
 function stopProject(){running=false;}
 
-function makeCtx(){
-  return{keys,prevKeys,received:receivedBroadcasts,toSend:pendingBroadcasts,stopAll:false};
-}
-
 function loop(){
   if(!running)return;
   prevKeys=Object.assign({},keys);
-  const C=makeCtx();
-  C.received=receivedBroadcasts;
-  C.toSend=new Set();
 
-  // run existing generators
+  // Update shared context in-place so all generators see current state
+  sharedC.keys=keys;
+  sharedC.prevKeys=prevKeys;
+  sharedC.received=receivedBroadcasts;
+  sharedC.toSend=new Set();
+  sharedC.stopAll=false;
+
   const newGens=[];
   for(const entry of runtimeGens){
-    // trigger new generators for event hats
-    if(!entry.gen&&!entry.done){
-      const hat=entry.stack.blocks[0];const def=BD[hat.type];
+    // Fire event hats if condition met and no active generator
+    if(!entry.gen&&entry.hatType!=='flag'){
+      const hat=entry.stack.blocks[0];
+      const def=BD[hat.type];
       let fire=false;
-      if(def.hatTest)fire=def.hatTest(entry.sprite,hat.fields,C);
+      if(def&&def.hatTest)fire=def.hatTest(entry.sprite,hat.fields,sharedC);
       if(fire){
-        entry.gen=execBlockList(entry.stack.blocks.slice(1),entry.sprite,C,'s'+entry.sprite.id+'_'+entry.si);
+        entry.gen=execBlockList(entry.stack.blocks.slice(1),entry.sprite,'s'+entry.sprite.id+'_'+entry.si);
       }
     }
+    // Advance generator one step (one 'frame' yield)
     if(entry.gen){
       try{
         const r=entry.gen.next();
-        if(r.done){entry.gen=null;entry.done=(entry.hatType==='flag');}
-      }catch(err){console.error(err);entry.gen=null;}
+        if(r.done){
+          entry.gen=null;
+          // Flag scripts that finish (non-forever) just stop — don't re-run
+          // Event scripts reset so they can fire again
+        }
+      }catch(err){console.error('Script error:',err);entry.gen=null;}
     }
-    // keep event hats alive (they can retrigger), remove done flag-hats
-    if(!entry.done||entry.hatType!=='flag')newGens.push(entry);
+    // Always keep entries alive — flag scripts may finish but event scripts must persist
+    newGens.push(entry);
   }
   runtimeGens=newGens;
 
-  // process broadcasts
-  receivedBroadcasts=C.toSend;
-  // spawn broadcast receivers
-  if(C.toSend.size>0){
+  // Handle broadcasts — spawn receivers
+  receivedBroadcasts=sharedC.toSend;
+  if(sharedC.toSend.size>0){
     sprites.forEach(s=>{
       s.scripts.forEach((stack,si)=>{
-        const hat=stack.blocks[0];if(!hat)return;
-        if(hat.type!=='whenReceive')return;
-        if(C.toSend.has(hat.fields.msg)){
-          const gen=execBlockList(stack.blocks.slice(1),s,C,'br_'+s.id+'_'+si+'_'+Date.now());
-          runtimeGens.push({sprite:s,stack,si,gen,hatType:'broadcast',done:false});
+        const hat=stack.blocks[0];if(!hat||hat.type!=='whenReceive')return;
+        if(sharedC.toSend.has(hat.fields.msg)){
+          // Only spawn if not already running
+          const alreadyRunning=runtimeGens.some(e=>e.sprite===s&&e.si===si&&e.gen);
+          if(!alreadyRunning){
+            const gen=execBlockList(stack.blocks.slice(1),s,'br_'+s.id+'_'+si+'_'+Date.now());
+            runtimeGens.push({sprite:s,stack,si,gen,hatType:'broadcast'});
+          }
         }
       });
     });
   }
 
-  if(C.stopAll){running=false;renderStage();return;}
+  if(sharedC.stopAll){running=false;renderStage();return;}
   renderStage();
   requestAnimationFrame(loop);
 }
